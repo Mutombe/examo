@@ -413,14 +413,7 @@ class GoogleAuthView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
-        try:
-            from google.oauth2 import id_token
-            from google.auth.transport import requests as google_requests
-        except ImportError:
-            return Response(
-                {'error': 'Google auth library not installed on server'},
-                status=status.HTTP_503_SERVICE_UNAVAILABLE,
-            )
+        import requests as http_requests
 
         serializer = GoogleAuthSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -432,22 +425,36 @@ class GoogleAuthView(APIView):
                 status=status.HTTP_503_SERVICE_UNAVAILABLE,
             )
 
+        # Verify the Google ID token via Google's tokeninfo endpoint
         try:
-            idinfo = id_token.verify_oauth2_token(
-                credential,
-                google_requests.Request(),
-                settings.GOOGLE_CLIENT_ID,
+            google_resp = http_requests.get(
+                'https://oauth2.googleapis.com/tokeninfo',
+                params={'id_token': credential},
+                timeout=10,
             )
+            if google_resp.status_code != 200:
+                return Response(
+                    {'error': 'Invalid Google token'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            idinfo = google_resp.json()
         except Exception as e:
             return Response(
                 {'error': f'Google token verification failed: {str(e)}'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        email = idinfo.get('email')
-        if not email:
+        # Verify the token was issued for our app
+        if idinfo.get('aud') != settings.GOOGLE_CLIENT_ID:
             return Response(
-                {'error': 'No email found in Google token'},
+                {'error': 'Google token was not issued for this application'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        email = idinfo.get('email')
+        if not email or idinfo.get('email_verified') != 'true':
+            return Response(
+                {'error': 'No verified email found in Google token'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
