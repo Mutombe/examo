@@ -25,8 +25,8 @@ export function DashboardPage() {
   return (
     <div className="space-y-6">
       {/* Welcome section */}
-      <div className="bg-gradient-to-r from-primary-600 to-primary-700 rounded-xl p-6 text-white">
-        <h1 className="text-2xl font-bold">
+      <div className="bg-gradient-to-r from-primary-600 to-primary-700 rounded-xl p-4 sm:p-6 text-white">
+        <h1 className="text-xl sm:text-2xl font-bold">
           Welcome back, {user?.first_name || user?.username || 'Student'}!
         </h1>
         <p className="mt-2 text-primary-100">
@@ -35,7 +35,7 @@ export function DashboardPage() {
       </div>
 
       {/* Quick stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
         <Card>
           <div className="flex items-center gap-4">
             <div className="p-3 rounded-lg bg-primary-100">

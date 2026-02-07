@@ -41,12 +41,24 @@ const getAuthToken = (): string | null => {
   return null
 }
 
+// Endpoints that should never send an Authorization header — a stale token
+// causes the backend to reject the request with 401 before AllowAny runs.
+// Includes all AllowAny backend views.
+const PUBLIC_ENDPOINTS = [
+  '/auth/login/', '/auth/register/', '/auth/google/', '/auth/refresh/', '/auth/password-reset/',
+  '/subjects/', '/boards/', '/syllabi/', '/papers/', '/topics/', '/library/',
+  '/paper-upload/',
+]
+
 // Request interceptor to add auth token
 api.interceptors.request.use(
   (config) => {
-    const token = getAuthToken()
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`
+    const isPublic = PUBLIC_ENDPOINTS.some((ep) => config.url?.includes(ep))
+    if (!isPublic) {
+      const token = getAuthToken()
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`
+      }
     }
     return config
   },
@@ -117,6 +129,7 @@ export const authApi = {
   registerSchoolAdmin: (data: RegisterSchoolAdminData) =>
     api.post('/auth/register/school-admin/', data),
   login: (email: string, password: string) => api.post('/auth/login/', { email, password }),
+  googleLogin: (credential: string) => api.post('/auth/google/', { credential }),
   me: () => api.get('/auth/me/'),
   refresh: (refreshToken: string) =>
     api.post('/auth/refresh/', { refresh: refreshToken }),

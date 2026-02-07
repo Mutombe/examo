@@ -54,12 +54,12 @@ export function PapersPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Exam Papers</h1>
-          <p className="text-gray-500 mt-1">Browse and practice past exam papers</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Exam Papers</h1>
+          <p className="text-gray-500 text-sm sm:text-base mt-1">Browse and practice past exam papers</p>
         </div>
-        <Button onClick={openPaperUploadModal}>
+        <Button onClick={openPaperUploadModal} className="self-start sm:self-auto">
           <Upload className="h-4 w-4 mr-2" />
           Upload Paper
         </Button>
@@ -67,9 +67,9 @@ export function PapersPage() {
 
       {/* Filters */}
       <Card>
-        <div className="flex flex-wrap gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <select
-            className="input max-w-xs"
+            className="input"
             value={filters.board}
             onChange={(e) => handleFilterChange({ ...filters, board: e.target.value })}
           >
@@ -82,7 +82,7 @@ export function PapersPage() {
           </select>
 
           <select
-            className="input max-w-xs"
+            className="input"
             value={filters.subject}
             onChange={(e) => handleFilterChange({ ...filters, subject: e.target.value })}
           >
@@ -95,7 +95,7 @@ export function PapersPage() {
           </select>
 
           <select
-            className="input max-w-xs"
+            className="input"
             value={filters.level}
             onChange={(e) => handleFilterChange({ ...filters, level: e.target.value })}
           >
@@ -107,7 +107,7 @@ export function PapersPage() {
           </select>
 
           <select
-            className="input max-w-xs"
+            className="input"
             value={filters.year}
             onChange={(e) => handleFilterChange({ ...filters, year: e.target.value })}
           >

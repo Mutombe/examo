@@ -122,6 +122,12 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
         return attrs
 
 
+class GoogleAuthSerializer(serializers.Serializer):
+    """Serializer for Google OAuth sign-in."""
+
+    credential = serializers.CharField(required=True)
+
+
 class ChangePasswordSerializer(serializers.Serializer):
     """Serializer for changing password."""
 

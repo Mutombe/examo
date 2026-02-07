@@ -18,7 +18,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from .serializers import (
     UserSerializer, RegisterSerializer, SchoolAdminRegisterSerializer,
-    LoginSerializer,
+    LoginSerializer, GoogleAuthSerializer,
     PasswordResetRequestSerializer, PasswordResetConfirmSerializer,
     ChangePasswordSerializer
 )
@@ -398,3 +398,76 @@ class ChangePasswordView(APIView):
         user.save()
 
         return Response({'message': 'Password changed successfully'})
+
+
+class GoogleAuthView(APIView):
+    """Sign in or register with a Google ID token."""
+
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        from google.oauth2 import id_token
+        from google.auth.transport import requests as google_requests
+
+        serializer = GoogleAuthSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        credential = serializer.validated_data['credential']
+
+        try:
+            idinfo = id_token.verify_oauth2_token(
+                credential,
+                google_requests.Request(),
+                settings.GOOGLE_CLIENT_ID,
+            )
+        except ValueError:
+            return Response(
+                {'error': 'Invalid Google token'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        email = idinfo['email']
+        first_name = idinfo.get('given_name', '')
+        last_name = idinfo.get('family_name', '')
+
+        user, created = User.objects.get_or_create(
+            email=email,
+            defaults={
+                'username': self._unique_username(email),
+                'first_name': first_name,
+                'last_name': last_name,
+                'role': 'student',
+            },
+        )
+
+        if created:
+            user.set_unusable_password()
+            user.save()
+        else:
+            # Fill in blank name fields from Google profile
+            changed = False
+            if not user.first_name and first_name:
+                user.first_name = first_name
+                changed = True
+            if not user.last_name and last_name:
+                user.last_name = last_name
+                changed = True
+            if changed:
+                user.save()
+
+        refresh = RefreshToken.for_user(user)
+
+        return Response({
+            'user': UserSerializer(user).data,
+            'access': str(refresh.access_token),
+            'refresh': str(refresh),
+        }, status=status.HTTP_200_OK if not created else status.HTTP_201_CREATED)
+
+    @staticmethod
+    def _unique_username(email: str) -> str:
+        base = email.split('@')[0]
+        username = base
+        counter = 1
+        while User.objects.filter(username=username).exists():
+            username = f'{base}{counter}'
+            counter += 1
+        return username

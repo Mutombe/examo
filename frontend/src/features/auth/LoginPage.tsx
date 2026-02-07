@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Button, Input, Card } from '@/components/ui'
+import { GoogleSignInButton } from '@/components/auth/GoogleSignInButton'
 import { authApi } from '@/lib/api'
 import { useAuthStore } from '@/stores/authStore'
 
@@ -55,6 +56,21 @@ export function LoginPage() {
         </div>
 
         <Card>
+          <GoogleSignInButton
+            onSuccess={() => navigate('/dashboard')}
+            onError={(msg) => setError(msg)}
+            text="signin_with"
+          />
+
+          <div className="relative my-5">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-200" />
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="bg-white px-3 text-gray-500">or sign in with email</span>
+            </div>
+          </div>
+
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             {error && (
               <div className="p-3 rounded-lg bg-danger-50 text-danger-600 text-sm">

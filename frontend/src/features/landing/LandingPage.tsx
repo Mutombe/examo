@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import {
   BookOpen,
@@ -11,6 +12,14 @@ import {
   Star,
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
+
+const rotatingWords = [
+  'AI-Powered',
+  'Smart',
+  'Instant',
+  'Personalized',
+  'Exam-Ready',
+]
 
 const features = [
   {
@@ -49,10 +58,10 @@ const subjects = [
 ]
 
 const stats = [
-  { value: '10,000+', label: 'Questions' },
-  { value: '500+', label: 'Past Papers' },
+  { value: '1000+', label: 'Questions' },
+  { value: '50+', label: 'Past Papers' },
   { value: '20+', label: 'Subjects' },
-  { value: '50,000+', label: 'Students' },
+  { value: '100+', label: 'Students' },
 ]
 
 const testimonials = [
@@ -80,38 +89,89 @@ const testimonials = [
 ]
 
 export function LandingPage() {
+  const [wordIndex, setWordIndex] = useState(0)
+  const [isAnimating, setIsAnimating] = useState(false)
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setIsAnimating(true)
+      setTimeout(() => {
+        setWordIndex((prev) => (prev + 1) % rotatingWords.length)
+        setIsAnimating(false)
+      }, 300)
+    }, 2500)
+    return () => clearInterval(interval)
+  }, [])
+
   return (
     <div className="space-y-16 pb-8">
       {/* Hero Section */}
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary-50 to-blue-50 -z-10" />
-        <div className="max-w-4xl mx-auto text-center py-16 px-4">
-          <div className="inline-flex items-center gap-2 bg-primary-100 text-primary-700 px-4 py-2 rounded-full text-sm font-medium mb-6">
-            <Star className="h-4 w-4 fill-current" />
+      <section className="relative overflow-hidden rounded-2xl min-h-[420px] sm:min-h-[480px]">
+        {/* Background image */}
+        <div
+          className="absolute inset-0 bg-cover bg-center"
+          style={{
+            backgroundImage: `url('')`,
+          }}
+        />
+
+        {/* Blue-to-white gradient blend over the image */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background: `linear-gradient(to right, rgba(37,99,235,0.85) 0%, rgba(26, 62, 140, 0.7) 30%, rgba(18, 57, 142, 0.45) 60%, rgba(0, 111, 215, 0.6) 100%)`,
+          }}
+        />
+
+        {/* Animated grid overlay */}
+        <div
+          className="absolute inset-0"
+          style={{
+            backgroundImage: `
+              linear-gradient(rgba(255,255,255,0.12) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(255,255,255,0.12) 1px, transparent 1px)
+            `,
+            backgroundSize: '40px 40px',
+            animation: 'gridMove 20s linear infinite',
+          }}
+        />
+
+        <div className="relative max-w-4xl mx-auto text-center py-16 sm:py-20 px-4">
+          <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-full text-sm font-medium mb-6 border border-white/30">
+            <Star className="h-4 w-4 fill-current text-yellow-300" />
             Zimbabwe's #1 Exam Prep Platform
           </div>
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-6 drop-shadow-md">
             Ace Your Exams with{' '}
-            <span className="text-primary-600">AI-Powered</span> Practice
+            <span
+              className={`inline-block text-blue-600 transition-all duration-300 ${
+                isAnimating
+                  ? 'opacity-0 translate-y-2 blur-sm'
+                  : 'opacity-100 translate-y-0 blur-0'
+              }`}
+            >
+              {rotatingWords[wordIndex]}
+            </span>{' '}
+            Practice
           </h1>
-          <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
+          <p className="text-base sm:text-lg md:text-xl text-white/90 mb-8 max-w-2xl mx-auto drop-shadow-sm">
             Practice with real ZIMSEC and Cambridge past papers. Get instant AI
             feedback on your answers and track your progress to exam success.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link to="/register">
-              <Button size="lg" className="w-full sm:w-auto">
+              <Button size="lg" className="w-full sm:w-auto bg-white text-blue-700 hover:bg-blue-50 shadow-lg">
                 Start Practicing Free
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </Link>
             <Link to="/subjects">
-              <Button variant="secondary" size="lg" className="w-full sm:w-auto">
+              <Button variant="secondary" size="lg" className="w-full sm:w-auto border-white/40 text-white bg-white/15 hover:bg-white/25 backdrop-blur-sm">
                 Browse Papers
               </Button>
             </Link>
           </div>
-          <p className="text-sm text-gray-500 mt-4">
+          <p className="text-sm text-white/70 mt-4 drop-shadow-sm">
             No credit card required. Start practicing immediately.
           </p>
         </div>
@@ -142,7 +202,7 @@ export function LandingPage() {
             for your exams.
           </p>
         </div>
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           {features.map((feature) => (
             <div
               key={feature.title}
@@ -168,7 +228,7 @@ export function LandingPage() {
             Browse papers from the most popular O-Level and A-Level subjects
           </p>
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-6 gap-3 sm:gap-4">
           {subjects.map((subject) => (
             <Link
               key={subject.name}
@@ -202,9 +262,9 @@ export function LandingPage() {
           <h2 className="text-3xl font-bold text-gray-900 mb-4">How It Works</h2>
           <p className="text-gray-600">Get started in three simple steps</p>
         </div>
-        <div className="grid md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
           <div className="text-center">
-            <div className="w-16 h-16 bg-primary-600 text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">
+            <div className="w-14 h-14 sm:w-16 sm:h-16 bg-primary-600 text-white rounded-full flex items-center justify-center text-xl sm:text-2xl font-bold mx-auto mb-4">
               1
             </div>
             <h3 className="font-semibold text-gray-900 mb-2">Choose a Paper</h3>
@@ -246,7 +306,7 @@ export function LandingPage() {
             Join thousands of students who improved their grades with ExamRevise
           </p>
         </div>
-        <div className="grid md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
           {testimonials.map((testimonial) => (
             <div
               key={testimonial.name}

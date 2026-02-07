@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Outlet, Link, useLocation } from 'react-router-dom'
-import { BookOpen, FileText, Menu, X, Facebook, Twitter, Mail, Library, Bookmark as BookmarkIcon } from 'lucide-react'
+import { BookOpen, FileText, Menu, X, Facebook, Mail, Library, Bookmark as BookmarkIcon } from 'lucide-react'
+import { FaXTwitter } from 'react-icons/fa6'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/Button'
 import { AuthPromptModal } from '@/components/auth/AuthPromptModal'
@@ -38,7 +39,7 @@ export function PublicLayout() {
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
             <Link to="/" className="flex items-center gap-2">
-              <img src="/logo.png" alt="ExamRevise" className="h-16 w-16 object-contain" />
+              <img src="/logo.png" alt="ExamRevise" className="h-16 w-16 object-contain" loading="eager"/>
             </Link>
 
             {/* Desktop Navigation */}
@@ -139,7 +140,7 @@ export function PublicLayout() {
       {/* Footer */}
       <footer className="bg-white border-t border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8">
             {/* Brand */}
             <div className="md:col-span-1">
               <div className="flex items-center gap-2 mb-4">
@@ -154,7 +155,7 @@ export function PublicLayout() {
                   <Facebook className="h-5 w-5" />
                 </a>
                 <a href="#" className="text-gray-400 hover:text-gray-600">
-                  <Twitter className="h-5 w-5" />
+                  <FaXTwitter className="h-5 w-5" />
                 </a>
                 <a href="mailto:support@examrevise.co.zw" className="text-gray-400 hover:text-gray-600">
                   <Mail className="h-5 w-5" />
@@ -239,14 +240,14 @@ export function PublicLayout() {
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="text-sm text-gray-600 hover:text-primary-600">
+                  <Link to="/privacy" className="text-sm text-gray-600 hover:text-primary-600">
                     Privacy Policy
-                  </a>
+                  </Link>
                 </li>
                 <li>
-                  <a href="#" className="text-sm text-gray-600 hover:text-primary-600">
+                  <Link to="/terms" className="text-sm text-gray-600 hover:text-primary-600">
                     Terms of Service
-                  </a>
+                  </Link>
                 </li>
               </ul>
             </div>

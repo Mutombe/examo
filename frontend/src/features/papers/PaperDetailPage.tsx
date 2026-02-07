@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useQuery, useMutation } from '@tanstack/react-query'
 import { FileText, Clock, Award, Play, ArrowLeft, Eye, Bookmark as BookmarkIcon } from 'lucide-react'
-import { Card, CardHeader, CardTitle, CardContent, Button, Badge, Skeleton, PDFViewerModal } from '@/components/ui'
+import { Card, CardHeader, CardTitle, CardContent, Button, Badge, Skeleton, PDFViewerModal, MathText } from '@/components/ui'
 import { examsApi, attemptsApi, progressApi, type Question } from '@/lib/api'
 import { useAuthStore } from '@/stores/authStore'
 import { useGuestStore } from '@/stores/guestStore'
@@ -102,13 +102,13 @@ export function PaperDetailPage() {
               <Badge variant="info">{paperData.session_display}</Badge>
               <Badge>{paperData.paper_type_display}</Badge>
             </div>
-            <h1 className="text-2xl font-bold text-gray-900">{paperData.title}</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{paperData.title}</h1>
             <p className="text-gray-500 mt-1">
               {paperData.syllabus.subject_name} - {paperData.syllabus.board_name} -{' '}
               {paperData.syllabus.level_display}
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-2">
             <Button
               size="lg"
               variant="secondary"
@@ -124,7 +124,7 @@ export function PaperDetailPage() {
                 onClick={() => setShowPDFViewer(true)}
               >
                 <Eye className="h-5 w-5 mr-2" />
-                View Original PDF
+                View PDF
               </Button>
             )}
             <Button
@@ -138,7 +138,7 @@ export function PaperDetailPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-4 mt-6 pt-6 border-t">
+        <div className="grid grid-cols-3 gap-2 sm:gap-4 mt-4 sm:mt-6 pt-4 sm:pt-6 border-t">
           <div className="text-center">
             <div className="flex items-center justify-center gap-2 text-gray-500 mb-1">
               <Clock className="h-4 w-4" />
@@ -184,10 +184,10 @@ export function PaperDetailPage() {
               >
                 <div className="flex items-center gap-3">
                   <span className="font-medium text-gray-500">Q{question.question_number}</span>
-                  <span className="text-sm text-gray-600 line-clamp-1">
-                    {question.question_text.substring(0, 80)}
-                    {question.question_text.length > 80 ? '...' : ''}
-                  </span>
+                  <MathText
+                    text={question.question_text.length > 80 ? question.question_text.substring(0, 80) + '...' : question.question_text}
+                    className="text-sm text-gray-600 line-clamp-1"
+                  />
                 </div>
                 <div className="flex items-center gap-2">
                   <Badge

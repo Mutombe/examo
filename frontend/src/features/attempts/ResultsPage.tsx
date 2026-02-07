@@ -1,7 +1,7 @@
 import { useNavigate, useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, CheckCircle, XCircle, Clock, Award, Target, Eye, FileText, Pause, BarChart3, ShieldCheck, ShieldAlert, Info } from 'lucide-react'
-import { Card, CardHeader, CardTitle, CardContent, Button, Badge } from '@/components/ui'
+import { Card, CardHeader, CardTitle, CardContent, Button, Badge, MathText } from '@/components/ui'
 import { attemptsApi, type Answer } from '@/lib/api'
 import { formatTime, formatPercentage, getScoreColor, getScoreBgColor, cn } from '@/lib/utils'
 
@@ -281,7 +281,7 @@ export function ResultsPage() {
                 </div>
 
                 <div className="mb-3">
-                  <p className="text-gray-700">{answer.question.question_text}</p>
+                  <MathText text={answer.question.question_text} as="div" className="text-gray-700" />
                 </div>
 
                 <div className="space-y-2 text-sm">

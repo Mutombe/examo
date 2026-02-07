@@ -8,6 +8,7 @@ import { Eye, EyeOff, X, Loader2, Building2 } from 'lucide-react'
 import { Modal } from '@/components/ui/Modal'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
+import { GoogleSignInButton } from '@/components/auth/GoogleSignInButton'
 import { authApi } from '@/lib/api'
 import { useAuthStore } from '@/stores/authStore'
 import { useAttemptSessionStore } from '@/stores/attemptSessionStore'
@@ -158,6 +159,27 @@ export function AuthModal({ isOpen, onClose, defaultTab = 'login' }: AuthModalPr
           </div>
         )}
 
+        {/* Google Sign In */}
+        <GoogleSignInButton
+          onSuccess={() => {
+            onClose()
+            setError(null)
+          }}
+          onError={(msg) => setError(msg)}
+          text={activeTab === 'login' ? 'signin_with' : 'signup_with'}
+        />
+
+        <div className="relative my-5">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-gray-200" />
+          </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="bg-white px-3 text-gray-500">
+              or {activeTab === 'login' ? 'sign in' : 'sign up'} with email
+            </span>
+          </div>
+        </div>
+
         {/* Login Form */}
         {activeTab === 'login' && (
           <form onSubmit={handleLogin} className="space-y-4">
@@ -261,7 +283,7 @@ export function AuthModal({ isOpen, onClose, defaultTab = 'login' }: AuthModalPr
         {/* Register Form */}
         {activeTab === 'register' && (
           <form onSubmit={handleRegister} className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   First Name

@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useQuery, useMutation } from '@tanstack/react-query'
 import { Clock, ChevronLeft, ChevronRight, Send, Bookmark, FileText, AlertCircle, Pause, Play, Eye } from 'lucide-react'
-import { Card, Button, Badge, Modal, PDFViewerModal } from '@/components/ui'
+import { Card, Button, Badge, Modal, PDFViewerModal, MathText } from '@/components/ui'
 import type { SourcePosition } from '@/components/ui/PDFViewer'
 import { examsApi, attemptsApi, type Question, type TrackingData } from '@/lib/api'
 import { cn } from '@/lib/utils'
@@ -381,60 +381,62 @@ export function AttemptPage() {
     <div className="max-w-4xl mx-auto space-y-6">
       {/* Guest banner */}
       {!isAuthenticated && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-center justify-between">
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div>
-            <p className="text-blue-800 font-medium">You're practicing as a guest</p>
-            <p className="text-blue-600 text-sm">
+            <p className="text-blue-800 font-medium text-sm sm:text-base">You're practicing as a guest</p>
+            <p className="text-blue-600 text-xs sm:text-sm">
               Sign up to save your progress and get AI feedback
             </p>
           </div>
-          <Button size="sm" onClick={() => useUIStore.getState().openAuthModal('register')}>
+          <Button size="sm" className="self-start sm:self-auto" onClick={() => useUIStore.getState().openAuthModal('register')}>
             Sign Up Free
           </Button>
         </div>
       )}
 
       {/* Header */}
-      <div className="flex items-center justify-between bg-white rounded-xl shadow-sm border p-4 sticky top-0 z-10">
-        <div>
-          <h1 className="font-bold text-lg">{paper.data.title}</h1>
-          <p className="text-sm text-gray-500">
-            Question {currentQuestionIndex + 1} of {questions.length}
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          {/* Timer with pause state */}
-          <div className={cn(
-            "flex items-center gap-2 px-3 py-1.5 rounded-lg",
-            isPaused ? "bg-yellow-100 text-yellow-700" : "text-gray-600"
-          )}>
-            <Clock className="h-5 w-5" />
-            <span className="font-mono font-medium">{formatTime(totalTimeSpent)}</span>
-            {isPaused && <span className="text-xs">(Paused)</span>}
+      <div className="bg-white rounded-xl shadow-sm border p-3 sm:p-4 sticky top-0 z-10">
+        <div className="flex items-center justify-between">
+          <div className="min-w-0 flex-1 mr-3">
+            <h1 className="font-bold text-sm sm:text-lg truncate">{paper.data.title}</h1>
+            <p className="text-xs sm:text-sm text-gray-500">
+              Q {currentQuestionIndex + 1} / {questions.length}
+            </p>
           </div>
-          {/* Pause/Resume button */}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handlePauseToggle}
-            title={isPaused ? "Resume" : "Pause"}
-          >
-            {isPaused ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
-          </Button>
-          {paper.data.pdf_url && (
+          <div className="flex items-center gap-1.5 sm:gap-3">
+            {/* Timer with pause state */}
+            <div className={cn(
+              "flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-sm",
+              isPaused ? "bg-yellow-100 text-yellow-700" : "text-gray-600"
+            )}>
+              <Clock className="h-4 w-4" />
+              <span className="font-mono font-medium">{formatTime(totalTimeSpent)}</span>
+            </div>
+            {/* Pause/Resume button */}
             <Button
-              variant="secondary"
-              onClick={() => handlePDFView(currentQuestion)}
-              title="View Original PDF with diagrams"
+              variant="ghost"
+              size="sm"
+              onClick={handlePauseToggle}
+              title={isPaused ? "Resume" : "Pause"}
             >
-              <FileText className="h-4 w-4 mr-2" />
-              View PDF
+              {isPaused ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
             </Button>
-          )}
-          <Button onClick={() => setShowSubmitModal(true)}>
-            <Send className="h-4 w-4 mr-2" />
-            Submit
-          </Button>
+            {paper.data.pdf_url && (
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => handlePDFView(currentQuestion)}
+                title="View Original PDF"
+              >
+                <FileText className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">View PDF</span>
+              </Button>
+            )}
+            <Button size="sm" onClick={() => setShowSubmitModal(true)}>
+              <Send className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Submit</span>
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -546,7 +548,7 @@ export function AttemptPage() {
             <h2 className="text-lg font-medium mb-2">
               Question {currentQuestion.question_number}
             </h2>
-            <p className="text-gray-700 whitespace-pre-line">{currentQuestion.question_text}</p>
+            <MathText text={currentQuestion.question_text} as="div" className="text-gray-700" />
             {currentQuestion.image && (
               <img
                 src={currentQuestion.image}

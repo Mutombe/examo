@@ -41,6 +41,9 @@ import { ProfilePage } from '@/features/profile/ProfilePage'
 // Library pages
 import { LibraryPage } from '@/features/library/LibraryPage'
 import { ResourceReaderPage } from '@/features/library/ResourceReaderPage'
+// Legal pages
+import { PrivacyPolicyPage } from '@/features/legal/PrivacyPolicyPage'
+import { TermsOfServicePage } from '@/features/legal/TermsOfServicePage'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
@@ -152,6 +155,10 @@ export function AppRouter() {
         {/* Library - accessible to everyone */}
         <Route path="library" element={<LibraryPage />} />
         <Route path="library/:slug" element={<ResourceReaderPage />} />
+
+        {/* Legal pages */}
+        <Route path="privacy" element={<PrivacyPolicyPage />} />
+        <Route path="terms" element={<TermsOfServicePage />} />
 
         {/* Student Dashboard - default for students */}
         <Route

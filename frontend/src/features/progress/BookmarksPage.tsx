@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { Modal } from '@/components/ui/Modal'
+import { MathText } from '@/components/ui/MathText'
 import { Pagination } from '@/components/ui/Pagination'
 import { useAuthStore } from '@/stores/authStore'
 import { useGuestStore } from '@/stores/guestStore'
@@ -328,7 +329,7 @@ function BookmarkCard({
             )}
           </div>
 
-          <p className="text-gray-900 mb-2">{question?.question_text || 'Saved question'}</p>
+          <MathText text={question?.question_text || 'Saved question'} as="p" className="text-gray-900 mb-2" />
 
           {bookmark.note && (
             <div className="mt-2 p-2 bg-yellow-50 rounded text-sm text-yellow-800">
