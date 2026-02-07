@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button'
 import { AuthPromptModal } from '@/components/auth/AuthPromptModal'
 import { AuthModal } from '@/components/auth/AuthModal'
 import { PaperUploadModal } from '@/components/papers/PaperUploadModal'
+import { ScrollToTop } from '@/components/ui/ScrollToTop'
 import { useGuestStore } from '@/stores/guestStore'
 import { useUIStore } from '@/stores/uiStore'
 
@@ -230,12 +231,12 @@ export function PublicLayout() {
               <h3 className="font-semibold text-gray-900 mb-4">Support</h3>
               <ul className="space-y-2">
                 <li>
-                  <a href="#" className="text-sm text-gray-600 hover:text-primary-600">
+                  <a href="mailto:support@examrevise.co.zw" className="text-sm text-gray-600 hover:text-primary-600">
                     Help Center
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="text-sm text-gray-600 hover:text-primary-600">
+                  <a href="mailto:support@examrevise.co.zw" className="text-sm text-gray-600 hover:text-primary-600">
                     Contact Us
                   </a>
                 </li>
@@ -266,6 +267,9 @@ export function PublicLayout() {
           </div>
         </div>
       </footer>
+
+      {/* Scroll to top */}
+      <ScrollToTop />
 
       {/* Modals */}
       <AuthPromptModal isOpen={shouldShowAuthModal} onClose={dismissAuthModal} />

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Outlet } from 'react-router-dom'
 import { Sidebar } from './Sidebar'
 import { Header } from './Header'
+import { ScrollToTop } from '@/components/ui/ScrollToTop'
 import { PaperUploadModal } from '@/components/papers/PaperUploadModal'
 import { useUIStore } from '@/stores/uiStore'
 
@@ -24,6 +25,9 @@ export function Layout() {
           </div>
         </footer>
       </div>
+
+      {/* Scroll to top */}
+      <ScrollToTop />
 
       {/* Global Modals */}
       <PaperUploadModal isOpen={isPaperUploadModalOpen} onClose={closePaperUploadModal} />

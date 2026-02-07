@@ -12,6 +12,7 @@ import {
   Star,
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
+import { useUIStore } from '@/stores/uiStore'
 
 const rotatingWords = [
   'AI-Powered',
@@ -91,6 +92,7 @@ const testimonials = [
 export function LandingPage() {
   const [wordIndex, setWordIndex] = useState(0)
   const [isAnimating, setIsAnimating] = useState(false)
+  const { openAuthModal } = useUIStore()
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -115,20 +117,20 @@ export function LandingPage() {
           }}
         />
 
-        {/* Blue-to-white gradient blend over the image */}
+        {/* Blue-to-white gradient blend over the image
         <div
           className="absolute inset-0"
           style={{
             background: `linear-gradient(to right, rgba(37,99,235,0.85) 0%, rgba(26, 62, 140, 0.7) 30%, rgba(18, 57, 142, 0.45) 60%, rgba(0, 111, 215, 0.6) 100%)`,
           }}
-        />
+        /> */}
 
         {/* Animated grid overlay */}
         <div
           className="absolute inset-0"
           style={{
             backgroundImage: `
-              linear-gradient(rgba(255,255,255,0.12) 1px, transparent 1px),
+              linear-gradient(rgba(61, 61, 61, 0.12) 1px, transparent 1px),
               linear-gradient(90deg, rgba(255,255,255,0.12) 1px, transparent 1px)
             `,
             backgroundSize: '40px 40px',
@@ -137,14 +139,14 @@ export function LandingPage() {
         />
 
         <div className="relative max-w-4xl mx-auto text-center py-16 sm:py-20 px-4">
-          <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-full text-sm font-medium mb-6 border border-white/30">
+          <div className="inline-flex items-center gap-2 bg-black/20 backdrop-blur-sm text-white px-4 py-2 rounded-full text-sm font-medium mb-6 border border-white/30">
             <Star className="h-4 w-4 fill-current text-yellow-300" />
             Zimbabwe's #1 Exam Prep Platform
           </div>
-          <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-6 drop-shadow-md">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-black mb-6 drop-shadow-md">
             Ace Your Exams with{' '}
             <span
-              className={`inline-block text-blue-600 transition-all duration-300 ${
+              className={`inline-block text-gray-500 transition-all duration-300 ${
                 isAnimating
                   ? 'opacity-0 translate-y-2 blur-sm'
                   : 'opacity-100 translate-y-0 blur-0'
@@ -154,19 +156,17 @@ export function LandingPage() {
             </span>{' '}
             Practice
           </h1>
-          <p className="text-base sm:text-lg md:text-xl text-white/90 mb-8 max-w-2xl mx-auto drop-shadow-sm">
+          <p className="text-base sm:text-lg md:text-xl text-black/90 mb-8 max-w-2xl mx-auto drop-shadow-sm">
             Practice with real ZIMSEC and Cambridge past papers. Get instant AI
             feedback on your answers and track your progress to exam success.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to="/register">
-              <Button size="lg" className="w-full sm:w-auto bg-white text-blue-700 hover:bg-blue-50 shadow-lg">
-                Start Practicing Free
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Button>
-            </Link>
+            <Button size="lg" className="w-full sm:w-auto hover:text-white text-blue-700 bg-blue-50 border-black/40 shadow-lg" onClick={() => openAuthModal('register')}>
+              Start Practicing Free
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </Button>
             <Link to="/subjects">
-              <Button variant="secondary" size="lg" className="w-full sm:w-auto border-white/40 text-white bg-white/15 hover:bg-white/25 backdrop-blur-sm">
+              <Button variant="secondary" size="lg" className="w-full sm:w-auto border-black/40 text-blue-700 bg-white/15 hover:bg-blue-50 backdrop-blur-sm">
                 Browse Papers
               </Button>
             </Link>
@@ -367,15 +367,14 @@ export function LandingPage() {
                   Register Your School
                 </Button>
               </Link>
-              <Link to="/register">
-                <Button
-                  variant="secondary"
-                  size="lg"
-                  className="bg-white/20 text-white border-white/30 hover:bg-white/30"
-                >
-                  Sign Up as Teacher
-                </Button>
-              </Link>
+              <Button
+                variant="secondary"
+                size="lg"
+                className="bg-white/20 text-white border-white/30 hover:bg-white/30"
+                onClick={() => openAuthModal('register')}
+              >
+                Sign Up as Teacher
+              </Button>
             </div>
           </div>
           <div className="hidden md:flex justify-center">
@@ -424,12 +423,10 @@ export function LandingPage() {
           their O-Level and A-Level exams.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Link to="/register">
-            <Button size="lg">
-              Create Free Account
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
-          </Link>
+          <Button size="lg" onClick={() => openAuthModal('register')}>
+            Create Free Account
+            <ArrowRight className="ml-2 h-5 w-5" />
+          </Button>
           <Link to="/papers">
             <Button variant="secondary" size="lg">
               Try Without Account
