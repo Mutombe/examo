@@ -1,11 +1,14 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { Document, Page, pdfjs } from 'react-pdf'
-import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Maximize2, Minimize2, X, Target } from 'lucide-react'
+import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Maximize2, Minimize2, X, Target, Download, Loader2 } from 'lucide-react'
 import { Button } from './Button'
 import { cn } from '@/lib/utils'
 
-// Set up PDF.js worker
-pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`
+// Use local worker instead of CDN for faster loading
+pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+  'pdfjs-dist/build/pdf.worker.min.mjs',
+  import.meta.url,
+).toString()
 
 export type SourcePosition = 'top' | 'upper' | 'middle' | 'lower' | 'bottom' | ''
 
@@ -44,6 +47,7 @@ export function PDFViewer({
   const [scale, setScale] = useState<number>(1.0)
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false)
   const [loading, setLoading] = useState<boolean>(true)
+  const [loadProgress, setLoadProgress] = useState<number>(0)
   const [error, setError] = useState<string | null>(null)
   const [showPositionIndicator, setShowPositionIndicator] = useState<boolean>(!!initialPosition)
   const contentRef = useRef<HTMLDivElement>(null)
@@ -52,6 +56,7 @@ export function PDFViewer({
   const onDocumentLoadSuccess = useCallback(({ numPages }: { numPages: number }) => {
     setNumPages(numPages)
     setLoading(false)
+    setLoadProgress(100)
     if (onPageChange) {
       onPageChange(pageNumber, numPages)
     }
@@ -61,6 +66,12 @@ export function PDFViewer({
     setError('Failed to load PDF. Please try again.')
     setLoading(false)
     console.error('PDF load error:', err)
+  }, [])
+
+  const onDocumentLoadProgress = useCallback(({ loaded, total }: { loaded: number; total: number }) => {
+    if (total > 0) {
+      setLoadProgress(Math.round((loaded / total) * 100))
+    }
   }, [])
 
   const onPageLoadSuccess = useCallback((page: any) => {
@@ -113,6 +124,15 @@ export function PDFViewer({
   // Calculate indicator position
   const indicatorPosition = initialPosition ? positionToScrollPercent[initialPosition] || 0 : 0
 
+  // Document options - enable range requests for faster loading of large PDFs
+  const documentOptions = {
+    cMapUrl: `https://unpkg.com/pdfjs-dist@${pdfjs.version}/cmaps/`,
+    cMapPacked: true,
+    disableAutoFetch: false,
+    disableStream: false,
+    disableRange: false,
+  }
+
   return (
     <div className={containerClasses}>
       {/* Header */}
@@ -136,6 +156,12 @@ export function PDFViewer({
               <ZoomIn className="h-4 w-4" />
             </Button>
           </div>
+          {/* Download button */}
+          <a href={url} target="_blank" rel="noopener noreferrer" title="Download PDF">
+            <Button variant="ghost" size="sm">
+              <Download className="h-4 w-4" />
+            </Button>
+          </a>
           {/* Fullscreen toggle */}
           <Button variant="ghost" size="sm" onClick={toggleFullscreen}>
             {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
@@ -171,13 +197,33 @@ export function PDFViewer({
       {/* PDF Content */}
       <div ref={contentRef} className="flex-1 overflow-auto bg-gray-100 p-4 relative">
         {loading && (
-          <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600" />
+          <div className="flex flex-col items-center justify-center h-64 gap-4">
+            <Loader2 className="h-8 w-8 animate-spin text-primary-600" />
+            <div className="text-center">
+              <p className="text-sm font-medium text-gray-700">Loading PDF...</p>
+              {loadProgress > 0 && loadProgress < 100 && (
+                <div className="mt-2 w-48">
+                  <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-primary-600 rounded-full transition-all duration-300"
+                      style={{ width: `${loadProgress}%` }}
+                    />
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">{loadProgress}%</p>
+                </div>
+              )}
+            </div>
           </div>
         )}
         {error && (
-          <div className="flex items-center justify-center h-64 text-red-600">
-            <p>{error}</p>
+          <div className="flex flex-col items-center justify-center h-64 gap-3">
+            <p className="text-red-600">{error}</p>
+            <a href={url} target="_blank" rel="noopener noreferrer">
+              <Button variant="secondary" size="sm">
+                <Download className="h-4 w-4 mr-2" />
+                Download PDF Instead
+              </Button>
+            </a>
           </div>
         )}
         <div className="relative">
@@ -185,8 +231,10 @@ export function PDFViewer({
             file={url}
             onLoadSuccess={onDocumentLoadSuccess}
             onLoadError={onDocumentLoadError}
+            onLoadProgress={onDocumentLoadProgress}
             loading={null}
             className="flex justify-center"
+            options={documentOptions}
           >
             <Page
               pageNumber={pageNumber}
@@ -197,7 +245,7 @@ export function PDFViewer({
               onLoadSuccess={onPageLoadSuccess}
               loading={
                 <div className="flex items-center justify-center h-64 w-96 bg-white">
-                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-600" />
+                  <Loader2 className="h-6 w-6 animate-spin text-primary-600" />
                 </div>
               }
             />
