@@ -7,7 +7,7 @@ from datetime import timedelta
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
-from django.core.mail import send_mail
+from django.core.mail import send_mail, EmailMultiAlternatives
 from django.conf import settings
 from django.utils import timezone
 from rest_framework import generics, status
@@ -321,24 +321,57 @@ class PasswordResetRequestView(APIView):
 
         try:
             user = User.objects.get(email=email)
-            # Generate a token
             token = default_token_generator.make_token(user)
 
-            # In production, send an actual email
-            # For now, we'll just return the token (development only)
-            reset_url = f"{settings.FRONTEND_URL}/reset-password?token={token}&uid={user.id}"
+            site_url = getattr(settings, 'SITE_URL', settings.FRONTEND_URL)
+            reset_url = f"{site_url}/reset-password?token={token}&uid={user.id}"
 
-            # TODO: Send actual email in production
-            # send_mail(
-            #     'Password Reset - ExamRevise Zimbabwe',
-            #     f'Click here to reset your password: {reset_url}',
-            #     settings.DEFAULT_FROM_EMAIL,
-            #     [email],
-            #     fail_silently=False,
-            # )
+            subject = 'Reset Your Password - ExamRevise Zimbabwe'
+            text_body = (
+                f"Hi {user.first_name or 'there'},\n\n"
+                f"We received a request to reset your password for your ExamRevise account.\n\n"
+                f"Click this link to reset your password:\n{reset_url}\n\n"
+                f"This link will expire in a few hours. If you didn't request this, you can safely ignore this email.\n\n"
+                f"- The ExamRevise Team"
+            )
+            html_body = f"""
+            <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 560px; margin: 0 auto; padding: 32px 24px;">
+              <div style="text-align: center; margin-bottom: 32px;">
+                <h1 style="font-size: 24px; font-weight: 700; color: #111827; margin: 0;">ExamRevise</h1>
+                <p style="color: #6b7280; font-size: 14px; margin: 4px 0 0;">Zimbabwe Exam Preparation</p>
+              </div>
+              <div style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 32px;">
+                <h2 style="font-size: 20px; font-weight: 600; color: #111827; margin: 0 0 8px;">Reset Your Password</h2>
+                <p style="color: #4b5563; font-size: 15px; line-height: 1.6; margin: 0 0 24px;">
+                  Hi {user.first_name or 'there'}, we received a request to reset the password for your account.
+                </p>
+                <div style="text-align: center; margin: 28px 0;">
+                  <a href="{reset_url}" style="display: inline-block; background: #4f46e5; color: #ffffff; text-decoration: none; font-weight: 600; font-size: 15px; padding: 12px 32px; border-radius: 8px;">
+                    Reset Password
+                  </a>
+                </div>
+                <p style="color: #6b7280; font-size: 13px; line-height: 1.5; margin: 24px 0 0;">
+                  This link will expire in a few hours. If you didn't request this, you can safely ignore this email &mdash; your password won't change.
+                </p>
+              </div>
+              <div style="text-align: center; margin-top: 24px;">
+                <p style="color: #9ca3af; font-size: 12px; margin: 0;">
+                  ExamRevise Zimbabwe &bull; <a href="{site_url}" style="color: #9ca3af;">examrevise.co.zw</a>
+                </p>
+              </div>
+            </div>
+            """
+
+            msg = EmailMultiAlternatives(
+                subject=subject,
+                body=text_body,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                to=[email],
+            )
+            msg.attach_alternative(html_body, 'text/html')
+            msg.send(fail_silently=True)
 
         except User.DoesNotExist:
-            # Don't reveal that the email doesn't exist
             pass
 
         return Response({
