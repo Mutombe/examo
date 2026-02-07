@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useMutation } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -44,6 +44,7 @@ export function AuthModal({ isOpen, onClose, defaultTab = 'login' }: AuthModalPr
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const login = useAuthStore((state) => state.login)
+  const navigate = useNavigate()
 
   const loginForm = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
@@ -62,6 +63,16 @@ export function AuthModal({ isOpen, onClose, defaultTab = 'login' }: AuthModalPr
     },
   })
 
+  const getDashboardPath = (role?: string) => {
+    switch (role) {
+      case 'admin': return '/admin'
+      case 'school_admin': return '/school'
+      case 'teacher': return '/teacher'
+      case 'parent': return '/parent'
+      default: return '/dashboard'
+    }
+  }
+
   const loginMutation = useMutation({
     mutationFn: (data: LoginForm) => authApi.login(data.email, data.password),
     onSuccess: (response) => {
@@ -71,6 +82,7 @@ export function AuthModal({ isOpen, onClose, defaultTab = 'login' }: AuthModalPr
       onClose()
       loginForm.reset()
       setError(null)
+      navigate(getDashboardPath(response.data.user.role))
     },
     onError: (err: any) => {
       setError(err.response?.data?.error || err.response?.data?.detail || 'Invalid email or password')
@@ -86,6 +98,7 @@ export function AuthModal({ isOpen, onClose, defaultTab = 'login' }: AuthModalPr
       onClose()
       registerForm.reset()
       setError(null)
+      navigate(getDashboardPath(response.data.user.role))
     },
     onError: (err: any) => {
       const message = err.response?.data?.email?.[0] ||
@@ -164,6 +177,8 @@ export function AuthModal({ isOpen, onClose, defaultTab = 'login' }: AuthModalPr
           onSuccess={() => {
             onClose()
             setError(null)
+            const currentUser = useAuthStore.getState().user
+            navigate(getDashboardPath(currentUser?.role))
           }}
           onError={(msg) => setError(msg)}
           text={activeTab === 'login' ? 'signin_with' : 'signup_with'}

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Outlet, Link, useLocation } from 'react-router-dom'
-import { BookOpen, FileText, Menu, X, Facebook, Mail, Library, Bookmark as BookmarkIcon } from 'lucide-react'
+import { BookOpen, FileText, Menu, X, Facebook, Mail, Library, Bookmark as BookmarkIcon, LayoutDashboard, LogOut, User } from 'lucide-react'
 import { FaXTwitter } from 'react-icons/fa6'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/Button'
@@ -8,6 +8,7 @@ import { AuthPromptModal } from '@/components/auth/AuthPromptModal'
 import { AuthModal } from '@/components/auth/AuthModal'
 import { PaperUploadModal } from '@/components/papers/PaperUploadModal'
 import { ScrollToTop } from '@/components/ui/ScrollToTop'
+import { useAuthStore } from '@/stores/authStore'
 import { useGuestStore } from '@/stores/guestStore'
 import { useUIStore } from '@/stores/uiStore'
 
@@ -21,6 +22,7 @@ const navigation = [
 export function PublicLayout() {
   const location = useLocation()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const { user, isAuthenticated, logout } = useAuthStore()
   const { shouldShowAuthModal, dismissAuthModal, getAnswerCount } = useGuestStore()
   const {
     isAuthModalOpen,
@@ -31,6 +33,21 @@ export function PublicLayout() {
     closePaperUploadModal,
   } = useUIStore()
   const answerCount = getAnswerCount()
+
+  const handleLogout = () => {
+    logout()
+    window.location.href = '/'
+  }
+
+  const getDashboardPath = () => {
+    switch (user?.role) {
+      case 'admin': return '/admin'
+      case 'school_admin': return '/school'
+      case 'teacher': return '/teacher'
+      case 'parent': return '/parent'
+      default: return '/dashboard'
+    }
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -65,19 +82,55 @@ export function PublicLayout() {
               })}
             </nav>
 
-            {/* Auth Buttons */}
+            {/* Auth Buttons / User Menu */}
             <div className="flex items-center gap-3">
-              {answerCount > 0 && (
-                <span className="hidden sm:inline text-sm text-gray-500">
-                  {answerCount} questions answered
-                </span>
+              {isAuthenticated && user ? (
+                <>
+                  <Link
+                    to={getDashboardPath()}
+                    className="hidden sm:flex items-center gap-2 text-sm font-medium text-primary-600 hover:text-primary-700 transition-colors"
+                  >
+                    <LayoutDashboard className="h-4 w-4" />
+                    Dashboard
+                  </Link>
+                  <div className="hidden sm:flex items-center gap-2 pl-2 border-l border-gray-200">
+                    <Link
+                      to="/profile"
+                      className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+                    >
+                      <div className="h-7 w-7 rounded-full bg-primary-100 flex items-center justify-center">
+                        <span className="text-xs font-medium text-primary-600">
+                          {user.first_name?.[0] || user.email?.[0]?.toUpperCase()}
+                        </span>
+                      </div>
+                      <span className="text-sm font-medium text-gray-700">
+                        {user.first_name || user.username}
+                      </span>
+                    </Link>
+                    <button
+                      onClick={handleLogout}
+                      className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+                      title="Sign out"
+                    >
+                      <LogOut className="h-4 w-4" />
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  {answerCount > 0 && (
+                    <span className="hidden sm:inline text-sm text-gray-500">
+                      {answerCount} questions answered
+                    </span>
+                  )}
+                  <Button variant="ghost" size="sm" onClick={() => openAuthModal('login')}>
+                    Sign in
+                  </Button>
+                  <Button size="sm" className="hidden sm:flex" onClick={() => openAuthModal('register')}>
+                    Get Started Free
+                  </Button>
+                </>
               )}
-              <Button variant="ghost" size="sm" onClick={() => openAuthModal('login')}>
-                Sign in
-              </Button>
-              <Button size="sm" className="hidden sm:flex" onClick={() => openAuthModal('register')}>
-                Get Started Free
-              </Button>
 
               {/* Mobile menu button */}
               <button
@@ -118,15 +171,43 @@ export function PublicLayout() {
                 )
               })}
               <div className="pt-3 border-t border-gray-200">
-                <Button
-                  className="w-full"
-                  onClick={() => {
-                    setMobileMenuOpen(false)
-                    openAuthModal('register')
-                  }}
-                >
-                  Get Started Free
-                </Button>
+                {isAuthenticated && user ? (
+                  <div className="space-y-2">
+                    <Link
+                      to={getDashboardPath()}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-primary-700 bg-primary-50"
+                    >
+                      <LayoutDashboard className="h-5 w-5" />
+                      Dashboard
+                    </Link>
+                    <Link
+                      to="/profile"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
+                    >
+                      <User className="h-5 w-5" />
+                      {user.first_name || user.username} {user.last_name || ''}
+                    </Link>
+                    <button
+                      onClick={() => { setMobileMenuOpen(false); handleLogout() }}
+                      className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 w-full"
+                    >
+                      <LogOut className="h-5 w-5" />
+                      Sign out
+                    </button>
+                  </div>
+                ) : (
+                  <Button
+                    className="w-full"
+                    onClick={() => {
+                      setMobileMenuOpen(false)
+                      openAuthModal('register')
+                    }}
+                  >
+                    Get Started Free
+                  </Button>
+                )}
               </div>
             </nav>
           </div>
@@ -188,22 +269,39 @@ export function PublicLayout() {
                     Bookmarks
                   </Link>
                 </li>
-                <li>
-                  <button
-                    onClick={() => openAuthModal('register')}
-                    className="text-sm text-gray-600 hover:text-primary-600"
-                  >
-                    Create Account
-                  </button>
-                </li>
-                <li>
-                  <button
-                    onClick={() => openAuthModal('login')}
-                    className="text-sm text-gray-600 hover:text-primary-600"
-                  >
-                    Sign In
-                  </button>
-                </li>
+                {isAuthenticated ? (
+                  <>
+                    <li>
+                      <Link to={getDashboardPath()} className="text-sm text-gray-600 hover:text-primary-600">
+                        Dashboard
+                      </Link>
+                    </li>
+                    <li>
+                      <Link to="/profile" className="text-sm text-gray-600 hover:text-primary-600">
+                        My Profile
+                      </Link>
+                    </li>
+                  </>
+                ) : (
+                  <>
+                    <li>
+                      <button
+                        onClick={() => openAuthModal('register')}
+                        className="text-sm text-gray-600 hover:text-primary-600"
+                      >
+                        Create Account
+                      </button>
+                    </li>
+                    <li>
+                      <button
+                        onClick={() => openAuthModal('login')}
+                        className="text-sm text-gray-600 hover:text-primary-600"
+                      >
+                        Sign In
+                      </button>
+                    </li>
+                  </>
+                )}
               </ul>
             </div>
 

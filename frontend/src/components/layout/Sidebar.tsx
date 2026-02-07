@@ -26,6 +26,7 @@ const publicNavigation = [
 ]
 
 const studentNavigation = [
+  { name: 'Home', href: '/', icon: Home },
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Subjects', href: '/subjects', icon: BookOpen },
   { name: 'Papers', href: '/papers', icon: FileText },
@@ -125,7 +126,7 @@ export function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
               </p>
               {mainNavigation.map((item) => {
                 const isActive =
-                  item.href === '/dashboard' || item.href === '/parent' || item.href === '/school' || item.href === '/admin'
+                  item.href === '/' || item.href === '/dashboard' || item.href === '/parent' || item.href === '/school' || item.href === '/admin'
                     ? location.pathname === item.href
                     : location.pathname.startsWith(item.href)
                 return (

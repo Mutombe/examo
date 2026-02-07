@@ -138,13 +138,15 @@ export function AppRouter() {
 
   return (
     <Routes>
-      {/* Public browsing routes - accessible without auth */}
-      <Route
-        path="/"
-        element={isAuthenticated ? <Layout /> : <PublicLayout />}
-      >
-        <Route index element={isAuthenticated ? <DashboardRedirect /> : <LandingPage />} />
+      {/* Landing & static pages - always PublicLayout (auth-aware) */}
+      <Route element={<PublicLayout />}>
+        <Route index element={<LandingPage />} />
+        <Route path="privacy" element={<PrivacyPolicyPage />} />
+        <Route path="terms" element={<TermsOfServicePage />} />
+      </Route>
 
+      {/* App routes - conditional layout based on auth */}
+      <Route element={isAuthenticated ? <Layout /> : <PublicLayout />}>
         {/* These routes work for both guests and authenticated users */}
         <Route path="subjects" element={<SubjectsPage />} />
         <Route path="papers" element={<PapersPage />} />
@@ -156,16 +158,15 @@ export function AppRouter() {
         <Route path="library" element={<LibraryPage />} />
         <Route path="library/:slug" element={<ResourceReaderPage />} />
 
-        {/* Legal pages */}
-        <Route path="privacy" element={<PrivacyPolicyPage />} />
-        <Route path="terms" element={<TermsOfServicePage />} />
+        {/* Bookmarks - accessible to everyone */}
+        <Route path="bookmarks" element={<BookmarksPage />} />
 
         {/* Student Dashboard - default for students */}
         <Route
           path="dashboard"
           element={
             <ProtectedRoute>
-              <DashboardPage />
+              <DashboardRedirect />
             </ProtectedRoute>
           }
         />
@@ -225,7 +226,6 @@ export function AppRouter() {
             </ProtectedRoute>
           }
         />
-        <Route path="bookmarks" element={<BookmarksPage />} />
         <Route
           path="profile"
           element={

@@ -10,8 +10,10 @@ import {
   Clock,
   ArrowRight,
   Star,
+  LayoutDashboard,
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
+import { useAuthStore } from '@/stores/authStore'
 import { useUIStore } from '@/stores/uiStore'
 
 const rotatingWords = [
@@ -92,7 +94,18 @@ const testimonials = [
 export function LandingPage() {
   const [wordIndex, setWordIndex] = useState(0)
   const [isAnimating, setIsAnimating] = useState(false)
+  const { user, isAuthenticated } = useAuthStore()
   const { openAuthModal } = useUIStore()
+
+  const getDashboardPath = () => {
+    switch (user?.role) {
+      case 'admin': return '/admin'
+      case 'school_admin': return '/school'
+      case 'teacher': return '/teacher'
+      case 'parent': return '/parent'
+      default: return '/dashboard'
+    }
+  }
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -161,19 +174,30 @@ export function LandingPage() {
             feedback on your answers and track your progress to exam success.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" className="w-full sm:w-auto hover:text-white text-blue-700 bg-blue-50 border-black/40 shadow-lg" onClick={() => openAuthModal('register')}>
-              Start Practicing Free
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
+            {isAuthenticated ? (
+              <Link to={getDashboardPath()}>
+                <Button size="lg" className="w-full sm:w-auto hover:text-white text-blue-700 bg-blue-50 border-black/40 shadow-lg">
+                  <LayoutDashboard className="mr-2 h-5 w-5" />
+                  Go to Dashboard
+                </Button>
+              </Link>
+            ) : (
+              <Button size="lg" className="w-full sm:w-auto hover:text-white text-blue-700 bg-blue-50 border-black/40 shadow-lg" onClick={() => openAuthModal('register')}>
+                Start Practicing Free
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Button>
+            )}
             <Link to="/subjects">
               <Button variant="secondary" size="lg" className="w-full sm:w-auto border-black/40 text-blue-700 bg-white/15 hover:bg-blue-50 backdrop-blur-sm">
                 Browse Papers
               </Button>
             </Link>
           </div>
-          <p className="text-sm text-white/70 mt-4 drop-shadow-sm">
-            No credit card required. Start practicing immediately.
-          </p>
+          {!isAuthenticated && (
+            <p className="text-sm text-white/70 mt-4 drop-shadow-sm">
+              No credit card required. Start practicing immediately.
+            </p>
+          )}
         </div>
       </section>
 
@@ -358,23 +382,38 @@ export function LandingPage() {
               </li>
             </ul>
             <div className="flex flex-col sm:flex-row gap-3">
-              <Link to="/register/school">
-                <Button
-                  variant="secondary"
-                  size="lg"
-                  className="bg-white text-primary-700 hover:bg-gray-100"
-                >
-                  Register Your School
-                </Button>
-              </Link>
-              <Button
-                variant="secondary"
-                size="lg"
-                className="bg-white/20 text-white border-white/30 hover:bg-white/30"
-                onClick={() => openAuthModal('register')}
-              >
-                Sign Up as Teacher
-              </Button>
+              {isAuthenticated && (user?.role === 'teacher' || user?.role === 'school_admin' || user?.role === 'admin') ? (
+                <Link to={getDashboardPath()}>
+                  <Button
+                    variant="secondary"
+                    size="lg"
+                    className="bg-white text-primary-700 hover:bg-gray-100"
+                  >
+                    <LayoutDashboard className="mr-2 h-5 w-5" />
+                    Go to Dashboard
+                  </Button>
+                </Link>
+              ) : (
+                <>
+                  <Link to="/register/school">
+                    <Button
+                      variant="secondary"
+                      size="lg"
+                      className="bg-white text-primary-700 hover:bg-gray-100"
+                    >
+                      Register Your School
+                    </Button>
+                  </Link>
+                  <Button
+                    variant="secondary"
+                    size="lg"
+                    className="bg-white/20 text-white border-white/30 hover:bg-white/30"
+                    onClick={() => openAuthModal('register')}
+                  >
+                    Sign Up as Teacher
+                  </Button>
+                </>
+              )}
             </div>
           </div>
           <div className="hidden md:flex justify-center">
@@ -416,20 +455,30 @@ export function LandingPage() {
       {/* CTA Section */}
       <section className="text-center py-8">
         <h2 className="text-3xl font-bold text-gray-900 mb-4">
-          Ready to Start Practicing?
+          {isAuthenticated ? 'Continue Your Learning Journey' : 'Ready to Start Practicing?'}
         </h2>
         <p className="text-gray-600 mb-8 max-w-xl mx-auto">
-          Join thousands of Zimbabwean students using ExamRevise to prepare for
-          their O-Level and A-Level exams.
+          {isAuthenticated
+            ? 'Head to your dashboard to track progress, attempt papers, and improve your grades.'
+            : 'Join thousands of Zimbabwean students using ExamRevise to prepare for their O-Level and A-Level exams.'}
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Button size="lg" onClick={() => openAuthModal('register')}>
-            Create Free Account
-            <ArrowRight className="ml-2 h-5 w-5" />
-          </Button>
+          {isAuthenticated ? (
+            <Link to={getDashboardPath()}>
+              <Button size="lg">
+                <LayoutDashboard className="mr-2 h-5 w-5" />
+                Go to Dashboard
+              </Button>
+            </Link>
+          ) : (
+            <Button size="lg" onClick={() => openAuthModal('register')}>
+              Create Free Account
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </Button>
+          )}
           <Link to="/papers">
             <Button variant="secondary" size="lg">
-              Try Without Account
+              Browse Papers
             </Button>
           </Link>
         </div>
