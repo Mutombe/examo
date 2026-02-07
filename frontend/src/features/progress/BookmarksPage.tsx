@@ -112,7 +112,7 @@ export function BookmarksPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Bookmarks</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Bookmarks</h1>
           <p className="text-gray-600">
             {isAuthenticated
               ? 'Your saved questions, papers, and resources'
@@ -122,13 +122,13 @@ export function BookmarksPage() {
       </div>
 
       {/* Type Tabs */}
-      <div className="flex gap-2 border-b border-gray-200 pb-3">
+      <div className="flex gap-2 border-b border-gray-200 pb-3 overflow-x-auto flex-nowrap">
         {TYPE_TABS.map((tab) => (
           <button
             key={tab.value}
             onClick={() => handleFilterChange(tab.value)}
             className={cn(
-              'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors',
+              'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap',
               selectedType === tab.value
                 ? 'bg-primary-100 text-primary-700'
                 : 'text-gray-600 hover:bg-gray-100'

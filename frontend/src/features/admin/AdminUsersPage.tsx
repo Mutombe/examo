@@ -99,12 +99,12 @@ export function AdminUsersPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">User Management</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">User Management</h1>
         <p className="text-gray-500 mt-1">Manage users and their roles</p>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-6 gap-3 sm:gap-4">
         {roleFilters.map((filter) => {
           const usersArray = getDataArray(users)
           const count = filter.id === 'all'
@@ -115,7 +115,7 @@ export function AdminUsersPage() {
               key={filter.id}
               onClick={() => setRoleFilter(filter.id as RoleFilter)}
               className={cn(
-                'p-4 rounded-lg text-left transition-colors',
+                'p-3 sm:p-4 rounded-lg text-left transition-colors',
                 roleFilter === filter.id
                   ? 'bg-primary-100 border-2 border-primary-500'
                   : 'bg-white border border-gray-200 hover:border-primary-300'
@@ -125,8 +125,8 @@ export function AdminUsersPage() {
                 'h-5 w-5 mb-2',
                 roleFilter === filter.id ? 'text-primary-600' : 'text-gray-400'
               )} />
-              <p className="text-2xl font-bold text-gray-900">{count}</p>
-              <p className="text-sm text-gray-500">{filter.label}</p>
+              <p className="text-lg sm:text-2xl font-bold text-gray-900">{count}</p>
+              <p className="text-xs sm:text-sm text-gray-500">{filter.label}</p>
             </button>
           )
         })}

@@ -1,6 +1,6 @@
-import { useState, useCallback, useEffect, useRef } from 'react'
+import { useState, useCallback, useEffect, useRef, useMemo, Component, type ErrorInfo, type ReactNode } from 'react'
 import { Document, Page, pdfjs } from 'react-pdf'
-import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Maximize2, Minimize2, X, Target, Download, Loader2 } from 'lucide-react'
+import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Maximize2, Minimize2, X, Target, Download, Loader2, AlertTriangle } from 'lucide-react'
 import { Button } from './Button'
 import { cn } from '@/lib/utils'
 
@@ -53,14 +53,20 @@ export function PDFViewer({
   const contentRef = useRef<HTMLDivElement>(null)
   const [pageHeight, setPageHeight] = useState<number>(0)
 
+  const pageNumberRef = useRef(pageNumber)
+  pageNumberRef.current = pageNumber
+
+  const onPageChangeRef = useRef(onPageChange)
+  onPageChangeRef.current = onPageChange
+
   const onDocumentLoadSuccess = useCallback(({ numPages }: { numPages: number }) => {
     setNumPages(numPages)
     setLoading(false)
     setLoadProgress(100)
-    if (onPageChange) {
-      onPageChange(pageNumber, numPages)
+    if (onPageChangeRef.current) {
+      onPageChangeRef.current(pageNumberRef.current, numPages)
     }
-  }, [pageNumber, onPageChange])
+  }, [])
 
   const onDocumentLoadError = useCallback((err: Error) => {
     setError('Failed to load PDF. Please try again.')
@@ -124,21 +130,22 @@ export function PDFViewer({
   // Calculate indicator position
   const indicatorPosition = initialPosition ? positionToScrollPercent[initialPosition] || 0 : 0
 
-  // Document options - enable range requests for faster loading of large PDFs
-  const documentOptions = {
+  // Memoize document options to prevent Document re-mounting on every render
+  // (a new object reference causes Document to destroy its worker and reload)
+  const documentOptions = useMemo(() => ({
     cMapUrl: `https://unpkg.com/pdfjs-dist@${pdfjs.version}/cmaps/`,
     cMapPacked: true,
     disableAutoFetch: false,
     disableStream: false,
     disableRange: false,
-  }
+  }), [])
 
   return (
     <div className={containerClasses}>
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b bg-gray-50 rounded-t-lg">
-        <div className="flex items-center gap-3">
-          {title && <h3 className="font-semibold text-gray-900 truncate max-w-xs">{title}</h3>}
+      <div className="flex items-center justify-between px-2 sm:px-4 py-2 sm:py-3 border-b bg-gray-50 rounded-t-lg">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+          {title && <h3 className="font-semibold text-gray-900 truncate max-w-[120px] sm:max-w-xs text-sm sm:text-base">{title}</h3>}
           {numPages > 0 && (
             <span className="text-sm text-gray-500">
               Page {pageNumber} of {numPages}
@@ -151,7 +158,7 @@ export function PDFViewer({
             <Button variant="ghost" size="sm" onClick={zoomOut} disabled={scale <= 0.5}>
               <ZoomOut className="h-4 w-4" />
             </Button>
-            <span className="text-sm text-gray-600 w-12 text-center">{Math.round(scale * 100)}%</span>
+            <span className="text-sm text-gray-600 w-12 text-center hidden sm:inline">{Math.round(scale * 100)}%</span>
             <Button variant="ghost" size="sm" onClick={zoomIn} disabled={scale >= 3}>
               <ZoomIn className="h-4 w-4" />
             </Button>
@@ -269,19 +276,19 @@ export function PDFViewer({
       </div>
 
       {/* Navigation */}
-      <div className="flex items-center justify-between px-4 py-3 border-t bg-gray-50 rounded-b-lg">
+      <div className="flex items-center justify-between px-2 sm:px-4 py-2 sm:py-3 border-t bg-gray-50 rounded-b-lg">
         <Button
           variant="secondary"
           onClick={previousPage}
           disabled={pageNumber <= 1}
         >
           <ChevronLeft className="h-4 w-4 mr-1" />
-          Previous
+          <span className="hidden sm:inline">Previous</span>
         </Button>
 
         {/* Page selector */}
         <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-600">Go to page:</span>
+          <span className="text-sm text-gray-600 hidden sm:inline">Go to page:</span>
           <input
             type="number"
             min={1}
@@ -297,12 +304,68 @@ export function PDFViewer({
           onClick={nextPage}
           disabled={pageNumber >= numPages}
         >
-          Next
+          <span className="hidden sm:inline">Next</span>
           <ChevronRight className="h-4 w-4 ml-1" />
         </Button>
       </div>
     </div>
   )
+}
+
+// Error boundary to catch react-pdf canvas rendering crashes
+interface PDFErrorBoundaryProps {
+  children: ReactNode
+  url: string
+  onClose?: () => void
+}
+
+interface PDFErrorBoundaryState {
+  hasError: boolean
+}
+
+class PDFErrorBoundary extends Component<PDFErrorBoundaryProps, PDFErrorBoundaryState> {
+  constructor(props: PDFErrorBoundaryProps) {
+    super(props)
+    this.state = { hasError: false }
+  }
+
+  static getDerivedStateFromError(): PDFErrorBoundaryState {
+    return { hasError: true }
+  }
+
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error('PDFViewer error:', error, errorInfo)
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="bg-white rounded-lg shadow-lg flex flex-col items-center justify-center p-8 gap-4 min-h-[300px]">
+          <AlertTriangle className="h-10 w-10 text-amber-500" />
+          <h3 className="font-semibold text-gray-900">PDF viewer encountered an error</h3>
+          <p className="text-sm text-gray-500 text-center">The PDF viewer crashed. You can try reopening or download the file directly.</p>
+          <div className="flex gap-3">
+            <Button variant="secondary" onClick={() => this.setState({ hasError: false })}>
+              Try Again
+            </Button>
+            <a href={this.props.url} target="_blank" rel="noopener noreferrer">
+              <Button>
+                <Download className="h-4 w-4 mr-2" />
+                Download PDF
+              </Button>
+            </a>
+            {this.props.onClose && (
+              <Button variant="ghost" onClick={this.props.onClose}>
+                Close
+              </Button>
+            )}
+          </div>
+        </div>
+      )
+    }
+
+    return this.props.children
+  }
 }
 
 // Modal wrapper for PDF viewer
@@ -321,8 +384,10 @@ export function PDFViewerModal({ isOpen, onClose, ...props }: PDFViewerModalProp
         onClick={onClose}
       />
       {/* Modal content */}
-      <div className="relative w-full max-w-4xl mx-4 max-h-[90vh]">
-        <PDFViewer {...props} onClose={onClose} isModal />
+      <div className="relative w-full max-w-4xl mx-2 sm:mx-4 max-h-[95vh] sm:max-h-[90vh]">
+        <PDFErrorBoundary url={props.url} onClose={onClose}>
+          <PDFViewer {...props} onClose={onClose} isModal />
+        </PDFErrorBoundary>
       </div>
     </div>
   )

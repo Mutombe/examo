@@ -487,8 +487,8 @@ export function AttemptPage() {
       {/* Paused overlay */}
       {isPaused && (
         <div className="fixed inset-0 bg-black/50 z-40 flex items-center justify-center">
-          <Card className="p-8 text-center max-w-md">
-            <Pause className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+          <Card className="p-4 sm:p-8 text-center max-w-sm sm:max-w-md mx-4">
+            <Pause className="h-8 w-8 sm:h-12 sm:w-12 text-gray-400 mx-auto mb-4" />
             <h2 className="text-xl font-semibold mb-2">Exam Paused</h2>
             <p className="text-gray-600 mb-4">
               Your timer is paused. Click resume when you're ready to continue.
@@ -627,7 +627,7 @@ export function AttemptPage() {
             </div>
           ) : (
             <textarea
-              className="input min-h-[200px]"
+              className="input min-h-[120px] sm:min-h-[200px]"
               placeholder="Type your answer here..."
               value={answers[currentQuestion.id]?.text || ''}
               onChange={(e) =>

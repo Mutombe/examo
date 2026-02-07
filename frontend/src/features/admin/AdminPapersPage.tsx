@@ -145,12 +145,12 @@ export function AdminPapersPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Paper Management</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Paper Management</h1>
           <p className="text-gray-500 mt-1">Review, approve, and manage uploaded papers</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 self-start sm:self-auto">
           <Button variant="secondary" onClick={() => refetch()}>
             <RefreshCw className="h-4 w-4 mr-2" />
             Refresh
@@ -212,9 +212,9 @@ export function AdminPapersPage() {
         <div className="space-y-4">
           {filteredPapers?.map((paper: any) => (
             <Card key={paper.id}>
-              <div className="flex items-start justify-between">
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                <div className="flex items-start gap-4 min-w-0">
+                  <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
                     <FileText className="h-6 w-6 text-gray-400" />
                   </div>
                   <div>
@@ -249,7 +249,7 @@ export function AdminPapersPage() {
                     )}
                   </div>
                 </div>
-                <div className="flex items-center gap-2 flex-wrap justify-end">
+                <div className="flex items-center gap-2 flex-wrap justify-end self-end sm:self-auto">
                   {/* View PDF Button */}
                   {paper.pdf_url && (
                     <a
@@ -452,7 +452,7 @@ export function AdminPapersPage() {
             )}
 
             {/* Action Buttons */}
-            <div className="flex gap-3 pt-4 border-t">
+            <div className="flex flex-wrap gap-3 pt-4 border-t">
               {/* Process with AI button */}
               <Button
                 variant="secondary"

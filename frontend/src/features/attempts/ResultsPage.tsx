@@ -82,12 +82,12 @@ export function ResultsPage() {
       {/* Score summary */}
       <Card className={cn('text-center', getScoreBgColor(attempt.percentage))}>
         <div className="py-6">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">{attempt.paper.title}</h1>
+          <h1 className="text-lg sm:text-2xl font-bold text-gray-900 mb-2">{attempt.paper.title}</h1>
           <p className="text-gray-500 mb-6">
             {attempt.paper.syllabus.subject_name} - {attempt.paper.syllabus.board_name}
           </p>
 
-          <div className={cn('text-6xl font-bold mb-2', getScoreColor(attempt.percentage))}>
+          <div className={cn('text-4xl sm:text-6xl font-bold mb-2', getScoreColor(attempt.percentage))}>
             {formatPercentage(attempt.percentage)}
           </div>
           <p className="text-gray-600">
@@ -97,33 +97,33 @@ export function ResultsPage() {
       </Card>
 
       {/* Primary Stats */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-3 gap-3 sm:gap-4">
         <Card className="text-center">
-          <div className="flex items-center justify-center gap-2 text-gray-500 mb-1">
+          <div className="flex items-center justify-center gap-1.5 sm:gap-2 text-gray-500 mb-1">
             <Target className="h-4 w-4" />
-            <span className="text-sm">Correct</span>
+            <span className="text-xs sm:text-sm">Correct</span>
           </div>
-          <p className="text-2xl font-bold text-success-600">
+          <p className="text-xl sm:text-2xl font-bold text-success-600">
             {correctCount} / {totalQuestions}
           </p>
         </Card>
 
         <Card className="text-center">
-          <div className="flex items-center justify-center gap-2 text-gray-500 mb-1">
+          <div className="flex items-center justify-center gap-1.5 sm:gap-2 text-gray-500 mb-1">
             <Clock className="h-4 w-4" />
-            <span className="text-sm">Time Spent</span>
+            <span className="text-xs sm:text-sm">Time Spent</span>
           </div>
-          <p className="text-2xl font-bold">
+          <p className="text-xl sm:text-2xl font-bold">
             {attempt.time_spent_formatted || formatTime(attempt.time_spent_seconds)}
           </p>
         </Card>
 
         <Card className="text-center">
-          <div className="flex items-center justify-center gap-2 text-gray-500 mb-1">
+          <div className="flex items-center justify-center gap-1.5 sm:gap-2 text-gray-500 mb-1">
             <Award className="h-4 w-4" />
-            <span className="text-sm">Grade</span>
+            <span className="text-xs sm:text-sm">Grade</span>
           </div>
-          <p className={cn('text-2xl font-bold', getScoreColor(attempt.percentage))}>
+          <p className={cn('text-xl sm:text-2xl font-bold', getScoreColor(attempt.percentage))}>
             {attempt.percentage >= 80
               ? 'A'
               : attempt.percentage >= 60
@@ -243,7 +243,7 @@ export function ResultsPage() {
                   answer.is_correct ? 'border-success-200 bg-success-50' : 'border-danger-200 bg-danger-50'
                 )}
               >
-                <div className="flex items-start justify-between mb-3">
+                <div className="flex flex-col sm:flex-row sm:items-start justify-between mb-3 gap-2">
                   <div className="flex items-center gap-2 flex-wrap">
                     {answer.is_correct ? (
                       <CheckCircle className="h-5 w-5 text-success-600" />
@@ -257,7 +257,7 @@ export function ResultsPage() {
                       {answer.score} / {answer.question.marks} marks
                     </Badge>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     {answer.time_spent_seconds && answer.time_spent_seconds > 0 && (
                       <span className="text-xs text-gray-500 flex items-center gap-1">
                         <Clock className="h-3 w-3" />
@@ -365,7 +365,7 @@ export function ResultsPage() {
       )}
 
       {/* Actions */}
-      <div className="flex gap-4">
+      <div className="flex flex-col sm:flex-row gap-3">
         <Button variant="secondary" className="flex-1" onClick={() => navigate('/papers')}>
           Try Another Paper
         </Button>

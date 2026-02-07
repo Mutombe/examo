@@ -15,7 +15,7 @@ export function SubjectsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Subjects</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Subjects</h1>
         <p className="text-gray-500 mt-1">Choose a subject to browse exam papers</p>
       </div>
 

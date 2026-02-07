@@ -142,23 +142,23 @@ export function PaperDetailPage() {
           <div className="text-center">
             <div className="flex items-center justify-center gap-2 text-gray-500 mb-1">
               <Clock className="h-4 w-4" />
-              <span className="text-sm">Duration</span>
+              <span className="text-xs sm:text-sm">Duration</span>
             </div>
-            <p className="text-xl font-bold">{paperData.duration_minutes} min</p>
+            <p className="text-lg sm:text-xl font-bold">{paperData.duration_minutes} min</p>
           </div>
           <div className="text-center">
             <div className="flex items-center justify-center gap-2 text-gray-500 mb-1">
               <Award className="h-4 w-4" />
-              <span className="text-sm">Total Marks</span>
+              <span className="text-xs sm:text-sm">Total Marks</span>
             </div>
-            <p className="text-xl font-bold">{paperData.total_marks}</p>
+            <p className="text-lg sm:text-xl font-bold">{paperData.total_marks}</p>
           </div>
           <div className="text-center">
             <div className="flex items-center justify-center gap-2 text-gray-500 mb-1">
               <FileText className="h-4 w-4" />
-              <span className="text-sm">Questions</span>
+              <span className="text-xs sm:text-sm">Questions</span>
             </div>
-            <p className="text-xl font-bold">{paperData.question_count}</p>
+            <p className="text-lg sm:text-xl font-bold">{paperData.question_count}</p>
           </div>
         </div>
 
@@ -180,16 +180,16 @@ export function PaperDetailPage() {
             {paperData.questions?.map((question: Question, index: number) => (
               <div
                 key={question.id}
-                className="flex items-center justify-between p-3 rounded-lg bg-gray-50"
+                className="flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-lg bg-gray-50 gap-2"
               >
-                <div className="flex items-center gap-3">
-                  <span className="font-medium text-gray-500">Q{question.question_number}</span>
+                <div className="flex items-center gap-3 min-w-0">
+                  <span className="font-medium text-gray-500 flex-shrink-0">Q{question.question_number}</span>
                   <MathText
                     text={question.question_text.length > 80 ? question.question_text.substring(0, 80) + '...' : question.question_text}
                     className="text-sm text-gray-600 line-clamp-1"
                   />
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 self-end sm:self-auto flex-shrink-0">
                   <Badge
                     variant={
                       question.question_type === 'mcq'
@@ -201,7 +201,7 @@ export function PaperDetailPage() {
                   >
                     {question.type_display}
                   </Badge>
-                  <span className="text-sm text-gray-500">{question.marks} marks</span>
+                  <span className="text-sm text-gray-500 whitespace-nowrap">{question.marks} marks</span>
                 </div>
               </div>
             ))}

@@ -142,12 +142,12 @@ export function AdminDashboard() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Admin Dashboard</h1>
           <p className="text-gray-500 mt-1">Manage papers, users, and content</p>
         </div>
-        <Button onClick={openPaperUploadModal}>
+        <Button onClick={openPaperUploadModal} className="self-start sm:self-auto">
           <Upload className="h-4 w-4 mr-2" />
           Upload Paper
         </Button>
@@ -155,13 +155,13 @@ export function AdminDashboard() {
 
       {/* Tabs */}
       <div className="border-b border-gray-200">
-        <nav className="flex gap-4">
+        <nav className="flex gap-1 sm:gap-4 overflow-x-auto -mx-1 px-1">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as TabType)}
               className={cn(
-                'flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors',
+                'flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap',
                 activeTab === tab.id
                   ? 'border-primary-600 text-primary-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700'
@@ -235,18 +235,18 @@ export function AdminDashboard() {
                 {getDataArray(pendingPapers).slice(0, 5).map((paper: any) => (
                   <div
                     key={paper.id}
-                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                    className="flex flex-col sm:flex-row sm:items-center justify-between p-3 bg-gray-50 rounded-lg gap-2"
                   >
-                    <div className="flex items-center gap-3">
-                      <FileText className="h-8 w-8 text-gray-400" />
-                      <div>
-                        <p className="font-medium text-gray-900">{paper.title}</p>
+                    <div className="flex items-center gap-3 min-w-0">
+                      <FileText className="h-8 w-8 text-gray-400 flex-shrink-0" />
+                      <div className="min-w-0">
+                        <p className="font-medium text-gray-900 truncate">{paper.title}</p>
                         <p className="text-sm text-gray-500">
                           {paper.syllabus?.subject} - {paper.syllabus?.board} - {paper.year}
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 self-end sm:self-auto">
                       <Badge variant="warning">Pending</Badge>
                       <Button size="sm" variant="secondary" onClick={() => handlePreview(paper)}>
                         <Eye className="h-4 w-4" />
@@ -264,7 +264,7 @@ export function AdminDashboard() {
       {activeTab === 'pending' && (
         <div className="space-y-4">
           {/* Search and Filter */}
-          <div className="flex gap-4">
+          <div className="flex flex-col sm:flex-row gap-3">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
               <input
@@ -275,7 +275,7 @@ export function AdminDashboard() {
                 className="input pl-10 w-full"
               />
             </div>
-            <Button variant="secondary">
+            <Button variant="secondary" className="self-start sm:self-auto">
               <Filter className="h-4 w-4 mr-2" />
               Filter
             </Button>
@@ -300,12 +300,12 @@ export function AdminDashboard() {
                 )
                 .map((paper: any) => (
                   <Card key={paper.id}>
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-start gap-4">
-                        <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                      <div className="flex items-start gap-4 min-w-0">
+                        <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
                           <FileText className="h-6 w-6 text-gray-400" />
                         </div>
-                        <div>
+                        <div className="min-w-0">
                           <h3 className="font-semibold text-gray-900">{paper.title}</h3>
                           <div className="flex flex-wrap gap-2 mt-2">
                             <Badge variant="secondary">{paper.syllabus?.board}</Badge>
@@ -324,7 +324,7 @@ export function AdminDashboard() {
                           )}
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2 self-end sm:self-auto">
                         {paper.question_count === 0 && (
                           <Button
                             size="sm"
@@ -365,11 +365,11 @@ export function AdminDashboard() {
           ) : (
             getDataArray(allPapers).map((paper: any) => (
               <Card key={paper.id}>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <FileText className="h-8 w-8 text-gray-400" />
-                    <div>
-                      <h3 className="font-medium text-gray-900">{paper.title}</h3>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="flex items-center gap-4 min-w-0">
+                    <FileText className="h-8 w-8 text-gray-400 flex-shrink-0" />
+                    <div className="min-w-0">
+                      <h3 className="font-medium text-gray-900 truncate">{paper.title}</h3>
                       <p className="text-sm text-gray-500">
                         {paper.syllabus?.subject || paper.subject_name} - {paper.syllabus?.board || paper.board_name} - {paper.year}
                       </p>
@@ -378,7 +378,7 @@ export function AdminDashboard() {
                       )}
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2 self-end sm:self-auto">
                     {paper.question_count === 0 && (
                       <Button
                         size="sm"
@@ -414,11 +414,11 @@ export function AdminDashboard() {
           ) : (
             getDataArray(allPapers).map((paper: any) => (
               <Card key={paper.id}>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <FileText className="h-8 w-8 text-gray-400" />
-                    <div>
-                      <h3 className="font-medium text-gray-900">{paper.title}</h3>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="flex items-center gap-4 min-w-0">
+                    <FileText className="h-8 w-8 text-gray-400 flex-shrink-0" />
+                    <div className="min-w-0">
+                      <h3 className="font-medium text-gray-900 truncate">{paper.title}</h3>
                       <p className="text-sm text-gray-500">
                         {paper.syllabus?.subject || paper.subject_name} - {paper.syllabus?.board || paper.board_name} - {paper.year}
                       </p>
@@ -429,7 +429,7 @@ export function AdminDashboard() {
                       )}
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 self-end sm:self-auto">
                     <Button size="sm" variant="secondary" onClick={() => handlePreview(paper)}>
                       <Eye className="h-4 w-4" />
                     </Button>
@@ -446,7 +446,8 @@ export function AdminDashboard() {
       {activeTab === 'users' && (
         <div className="space-y-4">
           <Card>
-            <table className="min-w-full">
+            <div className="overflow-x-auto -mx-4 sm:mx-0">
+            <table className="min-w-[600px] w-full">
               <thead>
                 <tr className="border-b border-gray-200">
                   <th className="text-left py-3 px-4 text-sm font-medium text-gray-500">User</th>
@@ -496,6 +497,7 @@ export function AdminDashboard() {
                 ))}
               </tbody>
             </table>
+            </div>
           </Card>
         </div>
       )}
@@ -570,7 +572,7 @@ export function AdminDashboard() {
               </div>
             )}
 
-            <div className="flex gap-3 pt-4 border-t">
+            <div className="flex flex-wrap gap-3 pt-4 border-t">
               {/* Extract Questions Button - always available */}
               <Button
                 variant="secondary"

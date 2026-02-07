@@ -138,12 +138,12 @@ export function LibraryPage() {
   return (
     <div className="max-w-7xl mx-auto space-y-8">
       {/* Hero Section */}
-      <div className="relative bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 rounded-2xl p-8 text-white overflow-hidden">
+      <div className="relative bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 rounded-2xl p-4 sm:p-6 md:p-8 text-white overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2" />
         <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2" />
         <div className="relative">
-          <h1 className="text-3xl font-bold mb-2 flex items-center gap-3">
-            <BookOpen className="h-8 w-8" />
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mb-2 flex items-center gap-2 sm:gap-3">
+            <BookOpen className="h-6 w-6 sm:h-8 sm:w-8" />
             Resource Library
           </h1>
           <p className="text-white/80 max-w-xl">
@@ -152,7 +152,7 @@ export function LibraryPage() {
           </p>
 
           {/* Search bar */}
-          <div className="mt-6 relative max-w-lg">
+          <div className="mt-4 sm:mt-6 relative max-w-lg">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
             <input
               type="text"
@@ -203,7 +203,7 @@ export function LibraryPage() {
       {featured.length > 0 && !searchQuery && !selectedCategory && !selectedType && (
         <div>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+            <h2 className="text-lg sm:text-xl font-bold text-gray-900 flex items-center gap-2">
               <TrendingUp className="h-5 w-5 text-primary-600" />
               Featured Resources
             </h2>

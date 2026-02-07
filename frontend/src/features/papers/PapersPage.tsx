@@ -156,7 +156,7 @@ export function PapersPage() {
                     </p>
                   </div>
 
-                  <div className="flex items-center gap-4 mt-4 pt-4 border-t text-sm text-gray-500">
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-4 mt-4 pt-4 border-t text-sm text-gray-500">
                     <div className="flex items-center gap-1">
                       <Clock className="h-4 w-4" />
                       {paper.duration_minutes} min
