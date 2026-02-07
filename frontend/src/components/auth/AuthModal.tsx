@@ -246,6 +246,15 @@ export function AuthModal({ isOpen, onClose, defaultTab = 'login' }: AuthModalPr
               )}
             </Button>
 
+            <div className="text-center">
+              <Link
+                to="/forgot-password"
+                onClick={onClose}
+                className="text-sm text-primary-600 hover:text-primary-700"
+              >
+                Forgot your password?
+              </Link>
+            </div>
           </form>
         )}
 
