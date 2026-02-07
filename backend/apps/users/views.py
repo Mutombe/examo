@@ -413,8 +413,14 @@ class GoogleAuthView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
-        from google.oauth2 import id_token
-        from google.auth.transport import requests as google_requests
+        try:
+            from google.oauth2 import id_token
+            from google.auth.transport import requests as google_requests
+        except ImportError:
+            return Response(
+                {'error': 'Google auth library not installed on server'},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
 
         serializer = GoogleAuthSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -422,7 +428,7 @@ class GoogleAuthView(APIView):
 
         if not settings.GOOGLE_CLIENT_ID:
             return Response(
-                {'error': 'Google sign-in is not configured on the server'},
+                {'error': 'Google sign-in is not configured on the server (missing GOOGLE_CLIENT_ID)'},
                 status=status.HTTP_503_SERVICE_UNAVAILABLE,
             )
 
@@ -432,53 +438,60 @@ class GoogleAuthView(APIView):
                 google_requests.Request(),
                 settings.GOOGLE_CLIENT_ID,
             )
-        except ValueError as e:
-            return Response(
-                {'error': 'Invalid Google token'},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
         except Exception as e:
             return Response(
                 {'error': f'Google token verification failed: {str(e)}'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        email = idinfo['email']
+        email = idinfo.get('email')
+        if not email:
+            return Response(
+                {'error': 'No email found in Google token'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         first_name = idinfo.get('given_name', '')
         last_name = idinfo.get('family_name', '')
 
-        user, created = User.objects.get_or_create(
-            email=email,
-            defaults={
-                'username': self._unique_username(email),
-                'first_name': first_name,
-                'last_name': last_name,
-                'role': 'student',
-            },
-        )
+        try:
+            user, created = User.objects.get_or_create(
+                email=email,
+                defaults={
+                    'username': self._unique_username(email),
+                    'first_name': first_name,
+                    'last_name': last_name,
+                    'role': 'student',
+                },
+            )
 
-        if created:
-            user.set_unusable_password()
-            user.save()
-        else:
-            # Fill in blank name fields from Google profile
-            changed = False
-            if not user.first_name and first_name:
-                user.first_name = first_name
-                changed = True
-            if not user.last_name and last_name:
-                user.last_name = last_name
-                changed = True
-            if changed:
+            if created:
+                user.set_unusable_password()
                 user.save()
+            else:
+                # Fill in blank name fields from Google profile
+                changed = False
+                if not user.first_name and first_name:
+                    user.first_name = first_name
+                    changed = True
+                if not user.last_name and last_name:
+                    user.last_name = last_name
+                    changed = True
+                if changed:
+                    user.save()
 
-        refresh = RefreshToken.for_user(user)
+            refresh = RefreshToken.for_user(user)
 
-        return Response({
-            'user': UserSerializer(user).data,
-            'access': str(refresh.access_token),
-            'refresh': str(refresh),
-        }, status=status.HTTP_200_OK if not created else status.HTTP_201_CREATED)
+            return Response({
+                'user': UserSerializer(user).data,
+                'access': str(refresh.access_token),
+                'refresh': str(refresh),
+            }, status=status.HTTP_200_OK if not created else status.HTTP_201_CREATED)
+        except Exception as e:
+            return Response(
+                {'error': f'Account creation failed: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
     @staticmethod
     def _unique_username(email: str) -> str:
