@@ -20,6 +20,7 @@ from .serializers import (
 class ResourceCategoryListView(generics.ListAPIView):
     """List all active resource categories."""
     serializer_class = ResourceCategorySerializer
+    authentication_classes = []
     permission_classes = [AllowAny]
     pagination_class = None
 
@@ -30,6 +31,7 @@ class ResourceCategoryListView(generics.ListAPIView):
 class ResourceListView(generics.ListAPIView):
     """List resources with filtering by category, subject, level, type."""
     serializer_class = ResourceListSerializer
+    authentication_classes = []
     permission_classes = [AllowAny]
 
     def get_queryset(self):
@@ -66,6 +68,7 @@ class ResourceListView(generics.ListAPIView):
 class ResourceDetailView(generics.RetrieveAPIView):
     """Get resource detail. Increments view count."""
     serializer_class = ResourceDetailSerializer
+    authentication_classes = []
     permission_classes = [AllowAny]
     lookup_field = 'slug'
 
@@ -83,6 +86,7 @@ class ResourceDetailView(generics.RetrieveAPIView):
 
 class ResourceShareView(APIView):
     """Track a share action on a resource."""
+    authentication_classes = []
     permission_classes = [AllowAny]
 
     def post(self, request, slug):
@@ -214,6 +218,7 @@ class MyReadingListView(generics.ListAPIView):
 class FeaturedResourcesView(generics.ListAPIView):
     """Get featured resources for the home page."""
     serializer_class = ResourceListSerializer
+    authentication_classes = []
     permission_classes = [AllowAny]
     pagination_class = None
 

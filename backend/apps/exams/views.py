@@ -27,6 +27,7 @@ class ExaminationBoardListView(generics.ListAPIView):
 
     queryset = ExaminationBoard.objects.filter(is_active=True)
     serializer_class = ExaminationBoardSerializer
+    authentication_classes = []
     permission_classes = [AllowAny]
     pagination_class = None
 
@@ -36,6 +37,7 @@ class SubjectListView(generics.ListAPIView):
 
     queryset = Subject.objects.filter(is_active=True)
     serializer_class = SubjectSerializer
+    authentication_classes = []
     permission_classes = [AllowAny]
     pagination_class = None
 
@@ -45,6 +47,7 @@ class SyllabusListView(generics.ListAPIView):
 
     queryset = Syllabus.objects.filter(is_active=True).select_related('board', 'subject')
     serializer_class = SyllabusListSerializer
+    authentication_classes = []
     permission_classes = [AllowAny]
     filter_backends = [filters.SearchFilter]
     search_fields = ['subject__name', 'board__name']
@@ -77,6 +80,7 @@ class PaperListView(generics.ListAPIView):
         'syllabus', 'syllabus__board', 'syllabus__subject'
     )
     serializer_class = PaperListSerializer
+    authentication_classes = []
     permission_classes = [AllowAny]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['title', 'syllabus__subject__name']
@@ -126,6 +130,7 @@ class PaperDetailView(generics.RetrieveAPIView):
         'syllabus', 'syllabus__board', 'syllabus__subject'
     ).prefetch_related('questions')
     serializer_class = PaperDetailSerializer
+    authentication_classes = []
     permission_classes = [AllowAny]
 
 
@@ -133,6 +138,7 @@ class PaperQuestionsView(generics.ListAPIView):
     """List questions for a specific paper."""
 
     serializer_class = QuestionSerializer
+    authentication_classes = []
     permission_classes = [AllowAny]
     pagination_class = None
 
@@ -145,6 +151,7 @@ class TopicListView(generics.ListAPIView):
     """List topics for a syllabus."""
 
     serializer_class = TopicSerializer
+    authentication_classes = []
     permission_classes = [AllowAny]
     pagination_class = None
 
@@ -163,6 +170,7 @@ class TopicDetailView(generics.RetrieveAPIView):
 
     queryset = Topic.objects.filter(is_active=True).prefetch_related('subtopics', 'questions')
     serializer_class = TopicSerializer
+    authentication_classes = []
     permission_classes = [AllowAny]
 
 
@@ -170,6 +178,7 @@ class TopicQuestionsView(generics.ListAPIView):
     """List questions for a specific topic."""
 
     serializer_class = QuestionSerializer
+    authentication_classes = []
     permission_classes = [AllowAny]
 
     def get_queryset(self):
@@ -180,7 +189,8 @@ class TopicQuestionsView(generics.ListAPIView):
 class PaperUploadView(generics.CreateAPIView):
     """Upload a new paper for review."""
 
-    permission_classes = [AllowAny]  # Anyone can upload, even guests
+    authentication_classes = []
+    permission_classes = [AllowAny]
     parser_classes = [MultiPartParser, FormParser]
     serializer_class = PaperUploadSerializer
 

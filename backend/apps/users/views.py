@@ -30,6 +30,7 @@ class RegisterView(generics.CreateAPIView):
     """User registration endpoint."""
 
     queryset = User.objects.all()
+    authentication_classes = []
     permission_classes = [AllowAny]
     serializer_class = RegisterSerializer
 
@@ -51,6 +52,7 @@ class RegisterView(generics.CreateAPIView):
 class SchoolAdminRegisterView(APIView):
     """Register a school admin - creates user, school, and teacher profile."""
 
+    authentication_classes = []
     permission_classes = [AllowAny]
 
     def post(self, request):
@@ -131,6 +133,7 @@ class SchoolAdminRegisterView(APIView):
 class AcceptInvitationView(APIView):
     """Accept a teacher invitation - creates user or links existing user to school."""
 
+    authentication_classes = []
     permission_classes = [AllowAny]
 
     def get(self, request, token):
@@ -259,6 +262,7 @@ class AcceptInvitationView(APIView):
 class LoginView(APIView):
     """User login endpoint."""
 
+    authentication_classes = []
     permission_classes = [AllowAny]
     serializer_class = LoginSerializer
 
@@ -306,6 +310,7 @@ class MeView(generics.RetrieveUpdateAPIView):
 class PasswordResetRequestView(APIView):
     """Request a password reset email."""
 
+    authentication_classes = []
     permission_classes = [AllowAny]
 
     def post(self, request):
@@ -344,6 +349,7 @@ class PasswordResetRequestView(APIView):
 class PasswordResetConfirmView(APIView):
     """Confirm password reset with token."""
 
+    authentication_classes = []
     permission_classes = [AllowAny]
 
     def post(self, request):
@@ -403,6 +409,7 @@ class ChangePasswordView(APIView):
 class GoogleAuthView(APIView):
     """Sign in or register with a Google ID token."""
 
+    authentication_classes = []
     permission_classes = [AllowAny]
 
     def post(self, request):
