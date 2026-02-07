@@ -420,15 +420,26 @@ class GoogleAuthView(APIView):
         serializer.is_valid(raise_exception=True)
         credential = serializer.validated_data['credential']
 
+        if not settings.GOOGLE_CLIENT_ID:
+            return Response(
+                {'error': 'Google sign-in is not configured on the server'},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+
         try:
             idinfo = id_token.verify_oauth2_token(
                 credential,
                 google_requests.Request(),
                 settings.GOOGLE_CLIENT_ID,
             )
-        except ValueError:
+        except ValueError as e:
             return Response(
                 {'error': 'Invalid Google token'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except Exception as e:
+            return Response(
+                {'error': f'Google token verification failed: {str(e)}'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
