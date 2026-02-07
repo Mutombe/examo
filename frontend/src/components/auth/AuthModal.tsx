@@ -246,52 +246,6 @@ export function AuthModal({ isOpen, onClose, defaultTab = 'login' }: AuthModalPr
               )}
             </Button>
 
-            {/* Demo accounts */}
-            <div className="mt-4 pt-4 border-t border-gray-200">
-              <p className="text-xs text-gray-500 text-center mb-3">Quick login (Demo accounts)</p>
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  className="text-xs px-2 py-1.5 bg-gray-100 hover:bg-gray-200 rounded text-gray-700"
-                  onClick={() => {
-                    loginForm.setValue('email', 'student@example.com')
-                    loginForm.setValue('password', 'student123')
-                  }}
-                >
-                  Student
-                </button>
-                <button
-                  type="button"
-                  className="text-xs px-2 py-1.5 bg-gray-100 hover:bg-gray-200 rounded text-gray-700"
-                  onClick={() => {
-                    loginForm.setValue('email', 'teacher@example.com')
-                    loginForm.setValue('password', 'teacher123')
-                  }}
-                >
-                  Teacher
-                </button>
-                <button
-                  type="button"
-                  className="text-xs px-2 py-1.5 bg-gray-100 hover:bg-gray-200 rounded text-gray-700"
-                  onClick={() => {
-                    loginForm.setValue('email', 'parent@example.com')
-                    loginForm.setValue('password', 'parent123')
-                  }}
-                >
-                  Parent
-                </button>
-                <button
-                  type="button"
-                  className="text-xs px-2 py-1.5 bg-gray-100 hover:bg-gray-200 rounded text-gray-700"
-                  onClick={() => {
-                    loginForm.setValue('email', 'admin@example.com')
-                    loginForm.setValue('password', 'admin123')
-                  }}
-                >
-                  Admin
-                </button>
-              </div>
-            </div>
           </form>
         )}
 
