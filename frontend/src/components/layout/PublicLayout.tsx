@@ -359,7 +359,15 @@ export function PublicLayout() {
                 &copy; {new Date().getFullYear()} ExamRevise Zimbabwe. All rights reserved.
               </p>
               <p className="text-sm text-gray-500">
-                Made with care for Zimbabwean students
+                A product of{' '}
+                <a
+                  href="https://bitstudio.co.zw"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary-600 hover:text-primary-700 font-medium"
+                >
+                  Bit Studio ZW
+                </a>
               </p>
             </div>
           </div>

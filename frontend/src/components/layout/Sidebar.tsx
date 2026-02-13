@@ -282,7 +282,17 @@ export function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
                 </Link>
               </div>
             )}
-            <p className="text-xs text-gray-500 text-center">ExamRevise Zimbabwe</p>
+            <p className="text-xs text-gray-500 text-center">
+              A product of{' '}
+              <a
+                href="https://bitstudio.co.zw"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary-600 hover:text-primary-700 font-medium"
+              >
+                Bit Studio ZW
+              </a>
+            </p>
           </div>
         </div>
       </aside>

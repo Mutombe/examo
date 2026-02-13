@@ -20,8 +20,19 @@ export function Layout() {
         </main>
         {/* Mobile footer - hidden on lg screens since sidebar has footer */}
         <footer className="lg:hidden bg-white border-t border-gray-200 py-3 px-4">
-          <div className="flex items-center justify-center gap-2">
+          <div className="flex flex-col items-center gap-1">
             <img src="/logo.png" alt="ExamRevise" className="h-10 w-10 object-contain" loading="eager"/>
+            <p className="text-xs text-gray-500">
+              A product of{' '}
+              <a
+                href="https://bitstudio.co.zw"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary-600 hover:text-primary-700 font-medium"
+              >
+                Bit Studio ZW
+              </a>
+            </p>
           </div>
         </footer>
       </div>
