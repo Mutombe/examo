@@ -7,17 +7,24 @@ const DELETING_SPEED = 50;
 const PAUSE_AFTER_TYPED = 1800;
 const PAUSE_AFTER_DELETED = 400;
 
+interface Dot {
+  x: number;
+  y: number;
+  phase: number;
+}
+
 // --- PARTICLE DOT GRID (Canvas) ---
 function ParticleDotGrid() {
-  const canvasRef = useRef(null);
-  const animationRef = useRef(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const animationRef = useRef<number | null>(null);
   const mouseRef = useRef({ x: -1000, y: -1000 });
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
-    let dots;
+    if (!ctx) return;
+    let dots: Dot[] = [];
     const SPACING = 32;
     const BASE_RADIUS = 1.2;
     const HOVER_RADIUS = 3.5;
@@ -27,6 +34,7 @@ function ParticleDotGrid() {
     const PULSE_SPEED = 0.0015;
 
     function initDots() {
+      if (!canvas || !ctx) return;
       const dpr = window.devicePixelRatio || 1;
       const w = canvas.offsetWidth;
       const h = canvas.offsetHeight;
@@ -43,7 +51,8 @@ function ParticleDotGrid() {
       }
     }
 
-    function draw(time) {
+    function draw(time: number) {
+      if (!canvas || !ctx) return;
       const w = canvas.offsetWidth;
       const h = canvas.offsetHeight;
       ctx.clearRect(0, 0, w, h);
@@ -68,7 +77,8 @@ function ParticleDotGrid() {
       animationRef.current = requestAnimationFrame(draw);
     }
 
-    function handleMouseMove(e) {
+    function handleMouseMove(e: MouseEvent) {
+      if (!canvas) return;
       const rect = canvas.getBoundingClientRect();
       mouseRef.current = { x: e.clientX - rect.left, y: e.clientY - rect.top };
     }
@@ -82,7 +92,7 @@ function ParticleDotGrid() {
     canvas.addEventListener("mouseleave", handleMouseLeave);
     window.addEventListener("resize", initDots);
     return () => {
-      cancelAnimationFrame(animationRef.current);
+      if (animationRef.current != null) cancelAnimationFrame(animationRef.current);
       canvas.removeEventListener("mousemove", handleMouseMove);
       canvas.removeEventListener("mouseleave", handleMouseLeave);
       window.removeEventListener("resize", initDots);
@@ -93,7 +103,7 @@ function ParticleDotGrid() {
 }
 
 // --- TYPEWRITER HOOK ---
-function useTypewriter(words) {
+function useTypewriter(words: string[]) {
   const [display, setDisplay] = useState("");
   const [wordIdx, setWordIdx] = useState(0);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -101,7 +111,7 @@ function useTypewriter(words) {
 
   useEffect(() => {
     const word = words[wordIdx];
-    let timeout;
+    let timeout: ReturnType<typeof setTimeout>;
     if (!isDeleting && display === word) {
       timeout = setTimeout(() => setIsDeleting(true), PAUSE_AFTER_TYPED);
     } else if (isDeleting && display === "") {
@@ -203,7 +213,6 @@ export default function HeroSection() {
                 transition: "opacity 0.1s",
                 verticalAlign: "baseline",
                 position: "relative", top: "0.08em",
-                // Reset the gradient text fill for the cursor
                 WebkitTextFillColor: "initial", backgroundClip: "initial",
                 WebkitBackgroundClip: "initial", background: "#60a5fa",
               }} />

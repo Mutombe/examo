@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link } from 'react-router-dom'
 import {
   BookOpen,
@@ -100,17 +100,24 @@ const PAUSE_AFTER_TYPED = 1800;
 const PAUSE_AFTER_DELETED = 400;
 
 // --- PARTICLE DOT GRID ---
+interface Dot {
+  x: number;
+  y: number;
+  phase: number;
+}
+
 function ParticleDotGrid() {
-  const canvasRef = useRef(null);
-  const animationRef = useRef(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const animationRef = useRef<number | null>(null);
   const mouseRef = useRef({ x: -1000, y: -1000 });
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
+    if (!ctx) return;
 
-    let width, height, dots;
+    let dots: Dot[] = [];
     const SPACING = 32;
     const BASE_RADIUS = 1.2;
     const HOVER_RADIUS = 3.5;
@@ -120,9 +127,11 @@ function ParticleDotGrid() {
     const PULSE_SPEED = 0.0015;
 
     function initDots() {
-      width = canvas.width = canvas.offsetWidth * window.devicePixelRatio;
-      height = canvas.height = canvas.offsetHeight * window.devicePixelRatio;
-      ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+      if (!canvas || !ctx) return;
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = canvas.offsetWidth * dpr;
+      canvas.height = canvas.offsetHeight * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
       dots = [];
       const cols = Math.ceil(canvas.offsetWidth / SPACING) + 1;
@@ -138,7 +147,8 @@ function ParticleDotGrid() {
       }
     }
 
-    function draw(time) {
+    function draw(time: number) {
+      if (!canvas || !ctx) return;
       ctx.clearRect(0, 0, canvas.offsetWidth, canvas.offsetHeight);
       const mx = mouseRef.current.x;
       const my = mouseRef.current.y;
@@ -154,7 +164,6 @@ function ParticleDotGrid() {
         const alpha =
           (BASE_ALPHA + (HOVER_ALPHA - BASE_ALPHA) * influence) * pulse;
 
-        // Color shift on hover: base blue-ish, hover bright cyan
         const red = Math.round(100 + 80 * influence);
         const green = Math.round(140 + 100 * influence);
         const blue = Math.round(220 + 35 * influence);
@@ -168,7 +177,8 @@ function ParticleDotGrid() {
       animationRef.current = requestAnimationFrame(draw);
     }
 
-    function handleMouseMove(e) {
+    function handleMouseMove(e: MouseEvent) {
+      if (!canvas) return;
       const rect = canvas.getBoundingClientRect();
       mouseRef.current = { x: e.clientX - rect.left, y: e.clientY - rect.top };
     }
@@ -185,7 +195,7 @@ function ParticleDotGrid() {
     window.addEventListener("resize", initDots);
 
     return () => {
-      cancelAnimationFrame(animationRef.current);
+      if (animationRef.current != null) cancelAnimationFrame(animationRef.current);
       canvas.removeEventListener("mousemove", handleMouseMove);
       canvas.removeEventListener("mouseleave", handleMouseLeave);
       window.removeEventListener("resize", initDots);
@@ -202,7 +212,7 @@ function ParticleDotGrid() {
 }
 
 // --- TYPEWRITER HOOK ---
-function useTypewriter(words) {
+function useTypewriter(words: string[]) {
   const [display, setDisplay] = useState("");
   const [wordIdx, setWordIdx] = useState(0);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -210,13 +220,11 @@ function useTypewriter(words) {
 
   useEffect(() => {
     const word = words[wordIdx];
-    let timeout;
+    let timeout: ReturnType<typeof setTimeout>;
 
     if (!isDeleting && display === word) {
-      // Finished typing — pause then start deleting
       timeout = setTimeout(() => setIsDeleting(true), PAUSE_AFTER_TYPED);
     } else if (isDeleting && display === "") {
-      // Finished deleting — move to next word
       timeout = setTimeout(() => {
         setIsDeleting(false);
         setWordIdx((prev) => (prev + 1) % words.length);
@@ -234,7 +242,6 @@ function useTypewriter(words) {
     return () => clearTimeout(timeout);
   }, [display, isDeleting, wordIdx, words]);
 
-  // Blinking cursor
   useEffect(() => {
     const cursorInterval = setInterval(
       () => setShowCursor((v) => !v),
@@ -247,11 +254,20 @@ function useTypewriter(words) {
 }
 
 // --- BUTTONS ---
-function PrimaryButton({ children, onClick, as: Tag = "button", ...props }) {
+interface LandingButtonProps {
+  children: React.ReactNode;
+  onClick?: () => void;
+  as?: string;
+  href?: string;
+  [key: string]: unknown;
+}
+
+function PrimaryButton({ children, onClick, as: Tag = "button", ...props }: LandingButtonProps) {
+  const Component = Tag as React.ElementType;
   return (
-    <Tag
+    <Component
       onClick={onClick}
-      className="group relative inline-flex items-center justify-center gap-2 px-7 py-3.5 
+      className="group relative inline-flex items-center justify-center gap-2 px-7 py-3.5
         text-white font-semibold text-base rounded-xl overflow-hidden cursor-pointer
         transition-all duration-300 ease-out
         hover:scale-[1.04] hover:shadow-[0_0_32px_rgba(59,130,246,0.45)]
@@ -274,13 +290,14 @@ function PrimaryButton({ children, onClick, as: Tag = "button", ...props }) {
         }}
       />
       <span className="relative z-10 flex items-center gap-2">{children}</span>
-    </Tag>
+    </Component>
   );
 }
 
-function SecondaryButton({ children, as: Tag = "button", ...props }) {
+function SecondaryButton({ children, as: Tag = "button", ...props }: LandingButtonProps) {
+  const Component = Tag as React.ElementType;
   return (
-    <Tag
+    <Component
       className="group relative inline-flex items-center justify-center gap-2 px-7 py-3.5
         font-semibold text-base rounded-xl cursor-pointer
         text-white/90 border border-slate-600
@@ -293,7 +310,7 @@ function SecondaryButton({ children, as: Tag = "button", ...props }) {
       {...props}
     >
       <span className="relative z-10 flex items-center gap-2 text-slate-600">{children}</span>
-    </Tag>
+    </Component>
   );
 }
 
