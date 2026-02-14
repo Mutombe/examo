@@ -9,8 +9,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from core.permissions import IsOwner
-from apps.ai_marking.services import AIMarkingService
-from .models import Attempt, Answer
+from .models import Attempt, Answer, MarkingProgress
 from .serializers import (
     AttemptSerializer,
     AttemptCreateSerializer,
@@ -19,6 +18,7 @@ from .serializers import (
     AttemptResultSerializer,
     AnswerCreateSerializer,
 )
+from .marking_runner import start_marking_thread
 
 
 class AttemptListCreateView(generics.ListCreateAPIView):
@@ -53,7 +53,7 @@ class AttemptDetailView(generics.RetrieveAPIView):
 
 
 class AttemptSubmitView(APIView):
-    """Submit an attempt for marking."""
+    """Submit an attempt for background marking."""
 
     permission_classes = [IsAuthenticated]
 
@@ -66,9 +66,27 @@ class AttemptSubmitView(APIView):
                 status=status.HTTP_404_NOT_FOUND
             )
 
+        # If already submitted, return existing progress status
+        if attempt.status in ('submitted', 'marked'):
+            try:
+                progress = attempt.marking_progress
+                return Response({
+                    'attempt_id': attempt.id,
+                    'paper_id': attempt.paper_id,
+                    'status': progress.status,
+                    'total_questions': progress.total_questions,
+                })
+            except MarkingProgress.DoesNotExist:
+                return Response({
+                    'attempt_id': attempt.id,
+                    'paper_id': attempt.paper_id,
+                    'status': 'completed' if attempt.status == 'marked' else 'queued',
+                    'total_questions': attempt.answers.count(),
+                })
+
         if attempt.status != 'in_progress':
             return Response(
-                {'error': 'Attempt has already been submitted'},
+                {'error': 'Attempt cannot be submitted'},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
@@ -79,25 +97,70 @@ class AttemptSubmitView(APIView):
         attempt.status = 'submitted'
         attempt.submitted_at = timezone.now()
         attempt.time_spent_seconds = serializer.validated_data.get('time_spent_seconds', 0)
-        attempt.save()
+        attempt.save(update_fields=['status', 'submitted_at', 'time_spent_seconds', 'last_activity_at'])
 
-        # Mark MCQ answers automatically
-        for answer in attempt.answers.filter(question__question_type='mcq'):
-            answer.mark_mcq()
+        # Create progress tracker and start background marking
+        total = attempt.answers.count()
+        progress = MarkingProgress.objects.create(
+            attempt=attempt,
+            total_questions=total,
+        )
+        start_marking_thread(attempt.id)
 
-        # Mark written answers with AI
-        marking_service = AIMarkingService()
-        written_answers = attempt.answers.exclude(question__question_type='mcq')
+        return Response({
+            'attempt_id': attempt.id,
+            'paper_id': attempt.paper_id,
+            'status': 'queued',
+            'total_questions': total,
+        })
 
-        for answer in written_answers:
-            marking_service.mark_answer(answer)
 
-        # Calculate total score
-        attempt.status = 'marked'
-        attempt.marked_at = timezone.now()
-        attempt.calculate_score()
+class MarkingProgressView(APIView):
+    """Poll marking progress for a submitted attempt."""
 
-        return Response(AttemptResultSerializer(attempt).data)
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, pk):
+        try:
+            attempt = Attempt.objects.get(pk=pk, user=request.user)
+        except Attempt.DoesNotExist:
+            return Response(
+                {'error': 'Attempt not found'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        try:
+            progress = attempt.marking_progress
+        except MarkingProgress.DoesNotExist:
+            return Response(
+                {'error': 'No marking progress found'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        # Update heartbeat
+        progress.last_polled_at = timezone.now()
+        progress.save(update_fields=['last_polled_at'])
+
+        # Support incremental messages via ?after=<ISO timestamp>
+        messages = progress.messages or []
+        after = request.query_params.get('after')
+        if after:
+            messages = [m for m in messages if m.get('timestamp', '') > after]
+
+        return Response({
+            'status': progress.status,
+            'total_questions': progress.total_questions,
+            'questions_marked': progress.questions_marked,
+            'current_question_number': progress.current_question_number,
+            'current_question_text': progress.current_question_text,
+            'messages': messages,
+            'started_at': progress.started_at,
+            'completed_at': progress.completed_at,
+            'error_message': progress.error_message,
+            # Include result data when completed
+            'percentage': float(attempt.percentage) if attempt.percentage else None,
+            'total_score': float(attempt.total_score) if attempt.total_score else None,
+        })
 
 
 class AttemptResultView(generics.RetrieveAPIView):

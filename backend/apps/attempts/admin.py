@@ -4,7 +4,7 @@ Admin configuration for the attempts app.
 
 from django.contrib import admin
 
-from .models import Attempt, Answer
+from .models import Attempt, Answer, MarkingProgress
 
 
 class AnswerInline(admin.TabularInline):
@@ -28,3 +28,11 @@ class AnswerAdmin(admin.ModelAdmin):
     list_filter = ['is_correct', 'ai_marked', 'question__question_type']
     search_fields = ['attempt__user__email', 'question__question_text']
     raw_id_fields = ['attempt', 'question']
+
+
+@admin.register(MarkingProgress)
+class MarkingProgressAdmin(admin.ModelAdmin):
+    list_display = ['attempt', 'status', 'questions_marked', 'total_questions', 'started_at', 'completed_at']
+    list_filter = ['status']
+    readonly_fields = ['messages', 'started_at', 'completed_at']
+    raw_id_fields = ['attempt']

@@ -204,7 +204,7 @@ class Question(models.Model):
         on_delete=models.CASCADE,
         related_name='questions'
     )
-    question_number = models.CharField(max_length=20)  # e.g., "1", "2a", "2b(i)"
+    question_number = models.CharField(max_length=50)  # e.g., "1", "2a", "2b(i)"
     question_text = models.TextField()
     question_type = models.CharField(max_length=20, choices=QUESTION_TYPE_CHOICES)
     marks = models.IntegerField(default=1)
@@ -216,9 +216,9 @@ class Question(models.Model):
         help_text='List of options for MCQ: [{"key": "A", "text": "Option A"}, ...]'
     )
     correct_answer = models.CharField(
-        max_length=10,
+        max_length=200,
         blank=True,
-        help_text='For MCQ: the key of correct option (A, B, C, D)'
+        help_text='For MCQ: the key of correct option (A, B, C, D). For written: brief answer.'
     )
 
     # For written answers

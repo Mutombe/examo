@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Link } from 'react-router-dom'
 import {
   BookOpen,
@@ -17,12 +17,13 @@ import { useAuthStore } from '@/stores/authStore'
 import { useUIStore } from '@/stores/uiStore'
 
 const rotatingWords = [
-  'AI-Powered',
-  'Smart',
-  'Instant',
-  'Personalized',
-  'Exam-Ready',
-]
+  "AI-Powered",
+  "Smart",
+  "Instant",
+  "Personalized",
+  "Exam-Ready",
+];
+
 
 const features = [
   {
@@ -61,8 +62,8 @@ const subjects = [
 ]
 
 const stats = [
-  { value: '1000+', label: 'Questions' },
-  { value: '50+', label: 'Past Papers' },
+  { value: '3000+', label: 'Questions' },
+  { value: '250+', label: 'Past Papers' },
   { value: '20+', label: 'Subjects' },
   { value: '100+', label: 'Students' },
 ]
@@ -91,11 +92,218 @@ const testimonials = [
   },
 ]
 
+
+
+const TYPING_SPEED = 90;
+const DELETING_SPEED = 50;
+const PAUSE_AFTER_TYPED = 1800;
+const PAUSE_AFTER_DELETED = 400;
+
+// --- PARTICLE DOT GRID ---
+function ParticleDotGrid() {
+  const canvasRef = useRef(null);
+  const animationRef = useRef(null);
+  const mouseRef = useRef({ x: -1000, y: -1000 });
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+
+    let width, height, dots;
+    const SPACING = 32;
+    const BASE_RADIUS = 1.2;
+    const HOVER_RADIUS = 3.5;
+    const HOVER_RANGE = 120;
+    const BASE_ALPHA = 0.18;
+    const HOVER_ALPHA = 0.55;
+    const PULSE_SPEED = 0.0015;
+
+    function initDots() {
+      width = canvas.width = canvas.offsetWidth * window.devicePixelRatio;
+      height = canvas.height = canvas.offsetHeight * window.devicePixelRatio;
+      ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+
+      dots = [];
+      const cols = Math.ceil(canvas.offsetWidth / SPACING) + 1;
+      const rows = Math.ceil(canvas.offsetHeight / SPACING) + 1;
+      for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) {
+          dots.push({
+            x: col * SPACING,
+            y: row * SPACING,
+            phase: Math.random() * Math.PI * 2,
+          });
+        }
+      }
+    }
+
+    function draw(time) {
+      ctx.clearRect(0, 0, canvas.offsetWidth, canvas.offsetHeight);
+      const mx = mouseRef.current.x;
+      const my = mouseRef.current.y;
+
+      for (const dot of dots) {
+        const dx = dot.x - mx;
+        const dy = dot.y - my;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        const influence = Math.max(0, 1 - dist / HOVER_RANGE);
+        const pulse = Math.sin(time * PULSE_SPEED + dot.phase) * 0.3 + 0.7;
+
+        const r = BASE_RADIUS + (HOVER_RADIUS - BASE_RADIUS) * influence;
+        const alpha =
+          (BASE_ALPHA + (HOVER_ALPHA - BASE_ALPHA) * influence) * pulse;
+
+        // Color shift on hover: base blue-ish, hover bright cyan
+        const red = Math.round(100 + 80 * influence);
+        const green = Math.round(140 + 100 * influence);
+        const blue = Math.round(220 + 35 * influence);
+
+        ctx.beginPath();
+        ctx.arc(dot.x, dot.y, r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${red},${green},${blue},${alpha})`;
+        ctx.fill();
+      }
+
+      animationRef.current = requestAnimationFrame(draw);
+    }
+
+    function handleMouseMove(e) {
+      const rect = canvas.getBoundingClientRect();
+      mouseRef.current = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+    }
+
+    function handleMouseLeave() {
+      mouseRef.current = { x: -1000, y: -1000 };
+    }
+
+    initDots();
+    animationRef.current = requestAnimationFrame(draw);
+
+    canvas.addEventListener("mousemove", handleMouseMove);
+    canvas.addEventListener("mouseleave", handleMouseLeave);
+    window.addEventListener("resize", initDots);
+
+    return () => {
+      cancelAnimationFrame(animationRef.current);
+      canvas.removeEventListener("mousemove", handleMouseMove);
+      canvas.removeEventListener("mouseleave", handleMouseLeave);
+      window.removeEventListener("resize", initDots);
+    };
+  }, []);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      className="absolute inset-0 w-full h-full pointer-events-auto"
+      style={{ zIndex: 0 }}
+    />
+  );
+}
+
+// --- TYPEWRITER HOOK ---
+function useTypewriter(words) {
+  const [display, setDisplay] = useState("");
+  const [wordIdx, setWordIdx] = useState(0);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showCursor, setShowCursor] = useState(true);
+
+  useEffect(() => {
+    const word = words[wordIdx];
+    let timeout;
+
+    if (!isDeleting && display === word) {
+      // Finished typing — pause then start deleting
+      timeout = setTimeout(() => setIsDeleting(true), PAUSE_AFTER_TYPED);
+    } else if (isDeleting && display === "") {
+      // Finished deleting — move to next word
+      timeout = setTimeout(() => {
+        setIsDeleting(false);
+        setWordIdx((prev) => (prev + 1) % words.length);
+      }, PAUSE_AFTER_DELETED);
+    } else if (isDeleting) {
+      timeout = setTimeout(() => {
+        setDisplay(word.substring(0, display.length - 1));
+      }, DELETING_SPEED);
+    } else {
+      timeout = setTimeout(() => {
+        setDisplay(word.substring(0, display.length + 1));
+      }, TYPING_SPEED);
+    }
+
+    return () => clearTimeout(timeout);
+  }, [display, isDeleting, wordIdx, words]);
+
+  // Blinking cursor
+  useEffect(() => {
+    const cursorInterval = setInterval(
+      () => setShowCursor((v) => !v),
+      530
+    );
+    return () => clearInterval(cursorInterval);
+  }, []);
+
+  return { display, showCursor };
+}
+
+// --- BUTTONS ---
+function PrimaryButton({ children, onClick, as: Tag = "button", ...props }) {
+  return (
+    <Tag
+      onClick={onClick}
+      className="group relative inline-flex items-center justify-center gap-2 px-7 py-3.5 
+        text-white font-semibold text-base rounded-xl overflow-hidden cursor-pointer
+        transition-all duration-300 ease-out
+        hover:scale-[1.04] hover:shadow-[0_0_32px_rgba(59,130,246,0.45)]
+        active:scale-[0.98]"
+      style={{
+        background: "linear-gradient(135deg, #1e40af 0%, #3730a3 100%)",
+        boxShadow:
+          "0 4px 24px rgba(30,64,175,0.3), inset 0 1px 0 rgba(255,255,255,0.1)",
+      }}
+      {...props}
+    >
+      {/* Shimmer sweep */}
+      <span
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background:
+            "linear-gradient(105deg, transparent 40%, rgba(27, 27, 27, 0.18) 80%, transparent 60%)",
+          backgroundSize: "200% 100%",
+          animation: "shimmer 3s ease-in-out infinite",
+        }}
+      />
+      <span className="relative z-10 flex items-center gap-2">{children}</span>
+    </Tag>
+  );
+}
+
+function SecondaryButton({ children, as: Tag = "button", ...props }) {
+  return (
+    <Tag
+      className="group relative inline-flex items-center justify-center gap-2 px-7 py-3.5
+        font-semibold text-base rounded-xl cursor-pointer
+        text-white/90 border border-slate-600
+        transition-all duration-300 ease-out
+        hover:bg-white/[0.12] hover:border-white/40 hover:scale-[1.03] hover:shadow-lg
+        active:scale-[0.98]"
+      style={{
+        background: "rgba(255, 255, 255, 0.08)",
+      }}
+      {...props}
+    >
+      <span className="relative z-10 flex items-center gap-2 text-slate-600">{children}</span>
+    </Tag>
+  );
+}
+
 export function LandingPage() {
   const [wordIndex, setWordIndex] = useState(0)
   const [isAnimating, setIsAnimating] = useState(false)
   const { user, isAuthenticated } = useAuthStore()
   const { openAuthModal } = useUIStore()
+  const { display, showCursor } = useTypewriter(rotatingWords);
+
 
   const getDashboardPath = () => {
     switch (user?.role) {
@@ -120,24 +328,27 @@ export function LandingPage() {
 
   return (
     <div className="space-y-16 pb-8">
-      {/* Hero Section */}
-      <section className="relative overflow-hidden rounded-2xl min-h-[420px] sm:min-h-[480px]">
-        {/* Background image */}
-        <div
-          className="absolute inset-0 bg-cover bg-center"
-          style={{
-            backgroundImage: `url('')`,
-          }}
-        />
+     <style>{`
+        @keyframes shimmer {
+          0%   { background-position: 200% 0; }
+          100% { background-position: -200% 0; }
+        }
+        @keyframes fadeInUp {
+          from { opacity: 0; transform: translateY(24px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in-up {
+          animation: fadeInUp 0.7s ease-out both;
+        }
+        .delay-1 { animation-delay: 0.1s; }
+        .delay-2 { animation-delay: 0.25s; }
+        .delay-3 { animation-delay: 0.4s; }
+        .delay-4 { animation-delay: 0.55s; }
+      `}</style>
 
-        {/* Blue-to-white gradient blend over the image
-        <div
-          className="absolute inset-0"
-          style={{
-            background: `linear-gradient(to right, rgba(37,99,235,0.85) 0%, rgba(26, 62, 140, 0.7) 30%, rgba(18, 57, 142, 0.45) 60%, rgba(0, 111, 215, 0.6) 100%)`,
-          }}
-        /> */}
-
+      <section
+        className="relative overflow-hidden rounded-2xl min-h-[420px] sm:min-h-[500px]"
+      >
         {/* Animated grid overlay */}
         <div
           className="absolute inset-0"
@@ -151,50 +362,75 @@ export function LandingPage() {
           }}
         />
 
-        <div className="relative max-w-4xl mx-auto text-center py-16 sm:py-20 px-4">
-          <div className="inline-flex items-center gap-2 bg-black/20 backdrop-blur-sm text-white px-4 py-2 rounded-full text-sm font-medium mb-6 border border-white/30">
-            <Star className="h-4 w-4 fill-current text-yellow-300" />
+        {/* Soft radial glow */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background:
+              "radial-gradient(ellipse 60% 50% at 50% 40%, rgba(59,130,246,0.12) 0%, transparent 70%)",
+          }}
+        />
+
+        {/* Content */}
+        <div className="relative z-10 max-w-4xl mx-auto text-center py-16 sm:py-20 px-4">
+          {/* Badge */}
+          <div className="animate-fade-in-up delay-1 inline-flex items-center gap-2 bg-slate-800 backdrop-blur-md text-white/90 px-4 py-2 rounded-full text-sm font-medium mb-8 border border-white/[0.12]">
+            <Star />
             Zimbabwe's #1 Exam Prep Platform
           </div>
-          <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-black mb-6 drop-shadow-md">
-            Ace Your Exams with{' '}
+
+          {/* Heading with typewriter */}
+          <h1 className="animate-fade-in-up delay-2 text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-slate-800 mb-6 leading-tight">
+            Ace Your Exams with{" "}
             <span
-              className={`inline-block text-gray-500 transition-all duration-300 ${
-                isAnimating
-                  ? 'opacity-0 translate-y-2 blur-sm'
-                  : 'opacity-100 translate-y-0 blur-0'
-              }`}
+              className="inline-block bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-400 bg-clip-text text-transparent"
+              style={{ minWidth: "3ch" }}
             >
-              {rotatingWords[wordIndex]}
-            </span>{' '}
+              {display}
+              <span
+                className="inline-block w-[3px] h-[0.85em] ml-0.5 align-middle rounded-sm"
+                style={{
+                  backgroundColor: "#60a5fa",
+                  opacity: showCursor ? 1 : 0,
+                  transition: "opacity 0.1s",
+                  verticalAlign: "baseline",
+                  position: "relative",
+                  top: "0.05em",
+                }}
+              />
+            </span>{" "}
+            <br className="hidden sm:block" />
             Practice
           </h1>
-          <p className="text-base sm:text-lg md:text-xl text-black/90 mb-8 max-w-2xl mx-auto drop-shadow-sm">
+
+          {/* Subtitle */}
+          <p className="animate-fade-in-up delay-3 text-base sm:text-lg md:text-xl text-black/65 mb-10 max-w-2xl mx-auto leading-relaxed">
             Practice with real ZIMSEC and Cambridge past papers. Get instant AI
             feedback on your answers and track your progress to exam success.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+
+          {/* Buttons */}
+          <div className="animate-fade-in-up delay-4 flex flex-col sm:flex-row gap-4 justify-center">
             {isAuthenticated ? (
-              <Link to={getDashboardPath()}>
-                <Button size="lg" className="w-full sm:w-auto hover:text-white text-blue-700 bg-blue-50 border-black/40 shadow-lg">
-                  <LayoutDashboard className="mr-2 h-5 w-5" />
-                  Go to Dashboard
-                </Button>
-              </Link>
+              <PrimaryButton as="a" href={getDashboardPath()}>
+                <LayoutDashboard />
+                Go to Dashboard
+              </PrimaryButton>
             ) : (
-              <Button size="lg" className="w-full sm:w-auto hover:text-white text-blue-700 bg-blue-50 border-black/40 shadow-lg" onClick={() => openAuthModal('register')}>
+              <PrimaryButton onClick={() => console.log("open register modal")}>
                 Start Practicing Free
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Button>
+                <ArrowRight />
+              </PrimaryButton>
             )}
-            <Link to="/subjects">
-              <Button variant="secondary" size="lg" className="w-full sm:w-auto border-black/40 text-blue-700 bg-white/15 hover:bg-blue-50 backdrop-blur-sm">
-                Browse Papers
-              </Button>
-            </Link>
+
+            <SecondaryButton as="a" href="/subjects">
+              Browse Papers
+            </SecondaryButton>
           </div>
+
+          {/* Footer text */}
           {!isAuthenticated && (
-            <p className="text-sm text-white/70 mt-4 drop-shadow-sm">
+            <p className="animate-fade-in-up delay-4 text-sm text-white/35 mt-6">
               No credit card required. Start practicing immediately.
             </p>
           )}

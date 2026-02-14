@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { FileText, Clock, Award, Upload } from 'lucide-react'
-import { Card, Button, Badge, CardSkeleton, Pagination } from '@/components/ui'
+import { Card, Button, Badge, Pagination } from '@/components/ui'
 import { examsApi, type Paper } from '@/lib/api'
 import { useUIStore } from '@/stores/uiStore'
 
@@ -123,9 +123,35 @@ export function PapersPage() {
 
       {/* Papers list */}
       {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 animate-pulse">
           {[1, 2, 3, 4, 5, 6].map((i) => (
-            <CardSkeleton key={i} />
+            <Card key={i} className="h-full">
+              <div className="flex items-start justify-between mb-3">
+                <div className="p-2 rounded-lg bg-gray-100">
+                  <div className="h-5 w-5" />
+                </div>
+                <div className="h-5 w-12 bg-gray-200 rounded-full" />
+              </div>
+              <div className="h-5 w-3/4 bg-gray-200 rounded mb-2" />
+              <div className="space-y-1.5">
+                <div className="h-3 w-1/2 bg-gray-200 rounded" />
+                <div className="h-3 w-2/3 bg-gray-200 rounded" />
+              </div>
+              <div className="flex items-center gap-4 mt-4 pt-4 border-t">
+                <div className="flex items-center gap-1">
+                  <div className="h-4 w-4 bg-gray-200 rounded" />
+                  <div className="h-3 w-12 bg-gray-200 rounded" />
+                </div>
+                <div className="flex items-center gap-1">
+                  <div className="h-4 w-4 bg-gray-200 rounded" />
+                  <div className="h-3 w-16 bg-gray-200 rounded" />
+                </div>
+                <div className="flex items-center gap-1">
+                  <div className="h-4 w-4 bg-gray-200 rounded" />
+                  <div className="h-3 w-10 bg-gray-200 rounded" />
+                </div>
+              </div>
+            </Card>
           ))}
         </div>
       ) : paperList.length === 0 ? (

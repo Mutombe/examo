@@ -38,6 +38,10 @@ import { ProgressPage } from '@/features/progress/ProgressPage'
 import { BookmarksPage } from '@/features/progress/BookmarksPage'
 // Profile page
 import { ProfilePage } from '@/features/profile/ProfilePage'
+// Marking pages
+import { MarkingProgressPage } from '@/features/marking/MarkingProgressPage'
+// Notification pages
+import { NotificationsPage } from '@/features/notifications/NotificationsPage'
 // Library pages
 import { LibraryPage } from '@/features/library/LibraryPage'
 import { ResourceReaderPage } from '@/features/library/ResourceReaderPage'
@@ -153,6 +157,14 @@ export function AppRouter() {
         <Route path="papers/:id" element={<PaperDetailPage />} />
         <Route path="papers/:id/attempt" element={<AttemptPage />} />
         <Route path="papers/:paperId/results/:attemptId" element={<ResultsPage />} />
+        <Route
+          path="papers/:paperId/marking/:attemptId"
+          element={
+            <ProtectedRoute>
+              <MarkingProgressPage />
+            </ProtectedRoute>
+          }
+        />
 
         {/* Library - accessible to everyone */}
         <Route path="library" element={<LibraryPage />} />
@@ -231,6 +243,16 @@ export function AppRouter() {
           element={
             <ProtectedRoute>
               <ProfilePage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Notifications */}
+        <Route
+          path="notifications"
+          element={
+            <ProtectedRoute>
+              <NotificationsPage />
             </ProtectedRoute>
           }
         />

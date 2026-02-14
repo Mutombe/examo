@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'apps.ai_marking',
     'apps.admin_api',
     'apps.library',
+    'apps.notifications',
     # Storage
     'storages',
 ]
@@ -240,3 +241,16 @@ SITE_URL = os.getenv('SITE_URL', 'https://examrevise.co.zw')
 
 # Google OAuth
 GOOGLE_CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID', '')
+
+# SQLite WAL mode for concurrent reads during background marking threads
+from django.db.backends.signals import connection_created
+
+
+def _set_sqlite_pragmas(sender, connection, **kwargs):
+    if connection.vendor == 'sqlite':
+        cursor = connection.cursor()
+        cursor.execute('PRAGMA journal_mode=WAL;')
+        cursor.execute('PRAGMA busy_timeout=5000;')
+
+
+connection_created.connect(_set_sqlite_pragmas)

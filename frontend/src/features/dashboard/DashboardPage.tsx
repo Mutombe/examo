@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { BookOpen, FileText, Clock, Trophy } from 'lucide-react'
-import { Card, CardHeader, CardTitle, CardContent, Badge, CardSkeleton } from '@/components/ui'
+import { Card, CardHeader, CardTitle, CardContent, Badge } from '@/components/ui'
 import { examsApi, attemptsApi } from '@/lib/api'
 import { useAuthStore } from '@/stores/authStore'
 import { formatDate, formatPercentage, getScoreColor } from '@/lib/utils'
@@ -88,9 +88,15 @@ export function DashboardPage() {
           </CardHeader>
           <CardContent>
             {subjectsLoading ? (
-              <div className="space-y-2">
+              <div className="space-y-2 animate-pulse">
                 {[1, 2, 3].map((i) => (
-                  <div key={i} className="h-12 bg-gray-100 rounded animate-pulse" />
+                  <div key={i} className="flex items-center gap-3 p-3 rounded-lg">
+                    <div className="w-10 h-10 bg-gray-200 rounded-lg" />
+                    <div>
+                      <div className="h-4 w-28 bg-gray-200 rounded mb-1.5" />
+                      <div className="h-3 w-16 bg-gray-200 rounded" />
+                    </div>
+                  </div>
                 ))}
               </div>
             ) : (
@@ -129,9 +135,15 @@ export function DashboardPage() {
           </CardHeader>
           <CardContent>
             {attemptsLoading ? (
-              <div className="space-y-2">
+              <div className="space-y-2 animate-pulse">
                 {[1, 2, 3].map((i) => (
-                  <div key={i} className="h-16 bg-gray-100 rounded animate-pulse" />
+                  <div key={i} className="flex items-center justify-between p-3 rounded-lg">
+                    <div>
+                      <div className="h-4 w-40 bg-gray-200 rounded mb-1.5" />
+                      <div className="h-3 w-24 bg-gray-200 rounded" />
+                    </div>
+                    <div className="h-5 w-12 bg-gray-200 rounded" />
+                  </div>
                 ))}
               </div>
             ) : recentAttempts.length === 0 ? (

@@ -131,3 +131,50 @@ class Answer(models.Model):
             self.confidence_score = 1.0
             self.confidence_level = 'high'
             self.save()
+
+
+class MarkingProgress(models.Model):
+    """Tracks live marking progress for an attempt."""
+
+    STATUS_CHOICES = [
+        ('queued', 'Queued'),
+        ('marking', 'Marking'),
+        ('calculating', 'Calculating'),
+        ('completed', 'Completed'),
+        ('failed', 'Failed'),
+    ]
+
+    attempt = models.OneToOneField(
+        Attempt, on_delete=models.CASCADE, related_name='marking_progress'
+    )
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='queued')
+    total_questions = models.IntegerField(default=0)
+    questions_marked = models.IntegerField(default=0)
+    current_question_number = models.CharField(max_length=50, blank=True)
+    current_question_text = models.CharField(max_length=200, blank=True)
+    messages = models.JSONField(default=list)
+    started_at = models.DateTimeField(null=True, blank=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    error_message = models.TextField(blank=True)
+    notification_sent = models.BooleanField(default=False)
+    email_sent = models.BooleanField(default=False)
+    last_polled_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        verbose_name_plural = 'Marking progress'
+
+    def __str__(self):
+        return f"Marking {self.attempt} - {self.status}"
+
+    def add_message(self, msg_type, text):
+        """Add a message to the log (capped at 100)."""
+        from django.utils import timezone as tz
+        msgs = self.messages or []
+        msgs.append({
+            'timestamp': tz.now().isoformat(),
+            'type': msg_type,
+            'text': text,
+        })
+        if len(msgs) > 100:
+            msgs = msgs[-100:]
+        self.messages = msgs

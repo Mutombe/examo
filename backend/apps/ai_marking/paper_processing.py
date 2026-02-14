@@ -114,10 +114,11 @@ class PaperProcessingService:
             if is_temp:
                 os.unlink(pdf_path)
 
-    def convert_pdf_to_images(self, pdf_file, max_pages=20):
+    def convert_pdf_to_images(self, pdf_file, max_pages=20, dpi=150, use_jpeg=True):
         """
         Convert PDF pages to base64-encoded images for vision processing.
         Works with both local and cloud (S3) storage backends.
+        Uses JPEG by default for much smaller payload sizes with scanned PDFs.
         """
         pdf_path, is_temp = _get_local_path(pdf_file)
         try:
@@ -125,20 +126,24 @@ class PaperProcessingService:
 
             doc = fitz.open(pdf_path)
             images = []
+            fmt = "jpeg" if use_jpeg else "png"
 
             num_pages = min(len(doc), max_pages)
 
             for page_num in range(num_pages):
                 page = doc[page_num]
-                mat = fitz.Matrix(150/72, 150/72)
+                mat = fitz.Matrix(dpi/72, dpi/72)
                 pix = page.get_pixmap(matrix=mat)
-                img_bytes = pix.tobytes("png")
+                if use_jpeg:
+                    img_bytes = pix.tobytes("jpeg", jpg_quality=60)
+                else:
+                    img_bytes = pix.tobytes("png")
                 img_base64 = base64.standard_b64encode(img_bytes).decode('utf-8')
                 images.append(img_base64)
-                logger.info(f"Converted page {page_num + 1} to image")
+                logger.info(f"Converted page {page_num + 1} to {fmt} ({dpi} DPI, {len(img_bytes)//1024}KB)")
 
             doc.close()
-            return images
+            return images, fmt
 
         except ImportError:
             logger.error("PyMuPDF (fitz) is required for image-based PDF processing")
@@ -157,12 +162,32 @@ class PaperProcessingService:
         # Remove page markers and whitespace
         cleaned = re.sub(r'---\s*Page\s*\d+\s*---', '', text)
         cleaned = cleaned.strip()
-        # Remove common scanner artifact text
+        # Remove common scanner artifact text and watermarks
         cleaned = re.sub(r'CamScanner', '', cleaned, flags=re.IGNORECASE)
-        cleaned = re.sub(r'Scanned\s+by\s+\w+', '', cleaned, flags=re.IGNORECASE)
+        cleaned = re.sub(r'Scanned\s+(by|with)\s+\w+', '', cleaned, flags=re.IGNORECASE)
+        cleaned = re.sub(r'MATHS\s+GUARDIOLA[^\n]*', '', cleaned, flags=re.IGNORECASE)
+        cleaned = re.sub(r'DREAMSCOMETRUE[^\n]*', '', cleaned, flags=re.IGNORECASE)
+        cleaned = re.sub(r'Study\s+in\s+India[^\n]*', '', cleaned, flags=re.IGNORECASE)
+        cleaned = re.sub(r'O\s+and\s+A\s+level\s+students[^\n]*', '', cleaned, flags=re.IGNORECASE)
+        cleaned = re.sub(r'ALL\s+MATERIAL\s+IS\s+FREE[^\n]*', '', cleaned, flags=re.IGNORECASE)
+        cleaned = re.sub(r'CRAM,\s+PASS[^\n]*', '', cleaned, flags=re.IGNORECASE)
+        cleaned = re.sub(r'FREE\s+O\s*&\s*A\s+LEVEL[^\n]*', '', cleaned, flags=re.IGNORECASE)
+        cleaned = re.sub(r'We\s+are\s+a\s+Study[^\n]*', '', cleaned, flags=re.IGNORECASE)
+        cleaned = re.sub(r'final\s+exams[^\n]*', '', cleaned, flags=re.IGNORECASE)
+        cleaned = re.sub(r'Consultancy\s+assisting[^\n]*', '', cleaned, flags=re.IGNORECASE)
+        cleaned = re.sub(r'[-\w]*Dollargrace[^\n]*', '', cleaned, flags=re.IGNORECASE)
+        cleaned = re.sub(r'[-\w]*Perry[^\n]*', '', cleaned, flags=re.IGNORECASE)
+        cleaned = re.sub(r'[+=]\d[\d\s\-]+', '', cleaned)  # Phone numbers like +91... or =263...
+        cleaned = re.sub(r'\+\d[\d\s\-]+', '', cleaned)  # Phone numbers
+        # Remove common ad/promo text
+        cleaned = re.sub(r'50%\s+to\s+study[^\n]*', '', cleaned, flags=re.IGNORECASE)
+        cleaned = re.sub(r'and\s+Diploma[^\n]*', '', cleaned, flags=re.IGNORECASE)
+        cleaned = re.sub(r'FILES\s+ZIMSEC[^\n]*', '', cleaned, flags=re.IGNORECASE)
+        cleaned = re.sub(r'scholarship[^\n]*', '', cleaned, flags=re.IGNORECASE)
+        cleaned = re.sub(r'Degree[^\n]*', '', cleaned, flags=re.IGNORECASE)
         cleaned = cleaned.strip()
-        # Check if there's substantial text content (at least 100 chars)
-        return len(cleaned) > 100
+        # Check if there's substantial text content (at least 500 chars after cleanup)
+        return len(cleaned) > 500
 
     def process_paper(self, paper):
         """
@@ -222,6 +247,14 @@ class PaperProcessingService:
                 'questions_extracted': 0
             }
 
+        # Refresh DB connection - it may have timed out during long API calls
+        from django.db import close_old_connections
+        close_old_connections()
+
+        # Re-fetch the paper to ensure we have a fresh DB connection
+        from apps.exams.models import Paper as PaperModel
+        paper = PaperModel.objects.get(id=paper.id)
+
         # Create Question objects
         questions_created = self._create_questions(paper, questions_data)
 
@@ -235,7 +268,7 @@ class PaperProcessingService:
             'total_marks': paper.total_marks
         }
 
-    def _extract_questions_with_vision(self, pdf_file, context, max_pages=20):
+    def _extract_questions_with_vision(self, pdf_file, context, max_pages=20, dpi=150):
         """
         Use Claude's vision capability to extract questions from image-based PDFs.
 
@@ -247,11 +280,14 @@ class PaperProcessingService:
             list: List of question dictionaries
         """
         # Convert PDF pages to images
-        images = self.convert_pdf_to_images(pdf_file, max_pages=max_pages)
+        result = self.convert_pdf_to_images(pdf_file, max_pages=max_pages, dpi=dpi)
 
-        if not images:
+        if not result:
             logger.error("Failed to convert PDF to images")
             return None
+
+        images, img_format = result
+        media_type = f"image/{img_format}"
 
         # Build the message content with images
         content = []
@@ -279,6 +315,16 @@ class PaperProcessingService:
 7. Describe any diagrams, graphs, tables, or figures in detail
 8. Include chemical equations, formulas, and scientific notation accurately
 
+**LaTeX Formatting (CRITICAL):**
+- Wrap ALL math expressions in LaTeX: inline $...$ or display $$...$$
+- Chemical formulas and equations: $\\ce{{H2O}}$, $\\ce{{2H2 + O2 -> 2H2O}}$, $\\ce{{CaCO3}}$
+- Units with numbers: $25 \\text{{ m/s}}$, $100 \\text{{ kg}}$, $\\text{{cm}}^2$
+- Fractions: $\\frac{{a}}{{b}}$, square roots: $\\sqrt{{x}}$, powers: $x^2$, $10^{{-3}}$
+- Greek letters: $\\alpha$, $\\theta$, $\\pi$, $\\Delta$
+- Subscripts/superscripts: $H_2O$, $x^2$, $CO_2$
+- MCQ options containing math or formulas MUST also use LaTeX
+- Do NOT wrap plain English text in LaTeX — only math, formulas, units, and scientific notation
+
 Here are the exam paper pages:"""
         })
 
@@ -292,7 +338,7 @@ Here are the exam paper pages:"""
                 "type": "image",
                 "source": {
                     "type": "base64",
-                    "media_type": "image/png",
+                    "media_type": media_type,
                     "data": img_base64
                 }
             })
@@ -336,14 +382,17 @@ IMPORTANT:
         try:
             logger.info(f"Sending {len(images)} page images to Claude for vision processing")
 
-            response = self.client.messages.create(
+            # Use streaming to avoid 10-minute timeout on long requests
+            response_text = ""
+            with self.client.messages.stream(
                 model=self.MODEL,
-                max_tokens=16000,  # Increased for longer papers
+                max_tokens=24000,  # Increased for longer papers
                 messages=[{"role": "user", "content": content}],
                 system="You are an expert at reading and extracting examination questions from scanned exam papers. You can accurately read handwritten and printed text, interpret diagrams, and understand scientific notation. Always return valid JSON. Ensure all strings are properly escaped."
-            )
+            ) as stream:
+                for text in stream.text_stream:
+                    response_text += text
 
-            response_text = response.content[0].text
             logger.info(f"Received response from Claude, length: {len(response_text)}")
 
             # Extract JSON from response
@@ -386,6 +435,17 @@ IMPORTANT:
         except json.JSONDecodeError as e:
             logger.error(f"Failed to parse AI response as JSON: {e}")
         except Exception as e:
+            if '413' in str(e):
+                # Request too large - try progressively lower resolution / fewer pages
+                if dpi > 72:
+                    new_dpi = max(72, dpi - 50)
+                    logger.warning(f"Request too large at {dpi} DPI, retrying at {new_dpi} DPI")
+                    return self._extract_questions_with_vision(pdf_file, context, max_pages=max_pages, dpi=new_dpi)
+                elif max_pages > 15:
+                    logger.warning(f"Request too large even at {dpi} DPI, retrying with max_pages=15")
+                    return self._extract_questions_with_vision(pdf_file, context, max_pages=15, dpi=dpi)
+                else:
+                    logger.error(f"Request too large even at {dpi} DPI with {max_pages} pages - cannot process")
             logger.error(f"Vision extraction failed: {e}")
 
         return None
@@ -421,8 +481,18 @@ IMPORTANT:
 5. Identify sub-questions (e.g., 1a, 1b, 1c) as separate entries
 6. Note any diagrams or figures mentioned (describe what they show)
 
+**LaTeX Formatting (CRITICAL):**
+- Wrap ALL math expressions in LaTeX: inline $...$ or display $$...$$
+- Chemical formulas and equations: $\\ce{{H2O}}$, $\\ce{{2H2 + O2 -> 2H2O}}$, $\\ce{{CaCO3}}$
+- Units with numbers: $25 \\text{{ m/s}}$, $100 \\text{{ kg}}$, $\\text{{cm}}^2$
+- Fractions: $\\frac{{a}}{{b}}$, square roots: $\\sqrt{{x}}$, powers: $x^2$, $10^{{-3}}$
+- Greek letters: $\\alpha$, $\\theta$, $\\pi$, $\\Delta$
+- Subscripts/superscripts: $H_2O$, $x^2$, $CO_2$
+- MCQ options containing math or formulas MUST also use LaTeX
+- Do NOT wrap plain English text in LaTeX — only math, formulas, units, and scientific notation
+
 **Paper Text:**
-{pdf_text[:15000]}
+{pdf_text[:25000]}
 """,
         ]
 
@@ -468,14 +538,16 @@ IMPORTANT:
         prompt = ''.join(prompt_parts)
 
         try:
-            response = self.client.messages.create(
+            # Use streaming to avoid 10-minute timeout on long requests
+            response_text = ""
+            with self.client.messages.stream(
                 model=self.MODEL,
-                max_tokens=16000,
+                max_tokens=24000,
                 messages=[{"role": "user", "content": prompt}],
                 system="You are an expert at extracting and structuring examination questions. Always return valid JSON."
-            )
-
-            response_text = response.content[0].text
+            ) as stream:
+                for text in stream.text_stream:
+                    response_text += text
 
             # Extract JSON from response
             start = response_text.find('[')
@@ -556,14 +628,22 @@ IMPORTANT:
                 if source_position not in valid_positions:
                     source_position = ''
 
+                # Truncate correct_answer to fit field (max 200 chars)
+                correct_answer = q_data.get('correct_answer') or ''
+                if len(correct_answer) > 200:
+                    correct_answer = correct_answer[:200]
+
+                # Truncate question_number to fit field (max 50 chars)
+                question_number = (q_data.get('question_number') or str(i + 1))[:50]
+
                 question = Question.objects.create(
                     paper=paper,
-                    question_number=q_data.get('question_number') or str(i + 1),
+                    question_number=question_number,
                     question_text=q_data.get('question_text') or '',
                     question_type=q_type,
                     marks=marks,
                     options=q_data.get('options'),
-                    correct_answer=q_data.get('correct_answer') or '',
+                    correct_answer=correct_answer,
                     marking_scheme=q_data.get('marking_scheme') or '',
                     topic_text=q_data.get('topic_text') or '',
                     difficulty=q_data.get('difficulty') or 'medium',

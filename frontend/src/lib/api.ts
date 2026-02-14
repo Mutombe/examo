@@ -162,6 +162,8 @@ export const attemptsApi = {
   submitAttempt: (id: number, timeSpent: number) =>
     api.post(`/attempts/${id}/submit/`, { time_spent_seconds: timeSpent }),
   getResults: (id: number) => api.get(`/attempts/${id}/results/`),
+  getMarkingProgress: (attemptId: number, after?: string) =>
+    api.get(`/attempts/${attemptId}/marking-progress/`, { params: after ? { after } : {} }),
   saveAnswer: (data: SaveAnswerData) => api.post('/answers/', data),
   // Sync guest answers after registration
   syncAnswers: (attemptId: number, data: SyncAnswersData) =>
@@ -169,6 +171,15 @@ export const attemptsApi = {
   // Tracking API
   trackActivity: (attemptId: number, data: TrackingData) =>
     api.post(`/attempts/${attemptId}/track/`, data),
+}
+
+// Notifications API
+export const notificationsApi = {
+  getNotifications: (params?: { page?: number }) =>
+    api.get('/notifications/', { params }),
+  getUnreadCount: () => api.get('/notifications/unread-count/'),
+  markRead: (id: number) => api.post(`/notifications/${id}/read/`),
+  markAllRead: () => api.post('/notifications/read-all/'),
 }
 
 // Teacher/Schools API
@@ -839,4 +850,44 @@ export interface InvitationInfo {
   school_name: string
   role: string
   department: string
+}
+
+// Marking Progress types
+export interface MarkingMessage {
+  timestamp: string
+  type: 'info' | 'progress' | 'result' | 'fun' | 'error' | 'complete'
+  text: string
+}
+
+export interface MarkingProgressData {
+  status: 'queued' | 'marking' | 'calculating' | 'completed' | 'failed'
+  total_questions: number
+  questions_marked: number
+  current_question_number: string
+  current_question_text: string
+  messages: MarkingMessage[]
+  started_at: string | null
+  completed_at: string | null
+  error_message: string
+  percentage: number | null
+  total_score: number | null
+}
+
+export interface SubmitAttemptResponse {
+  attempt_id: number
+  paper_id: number
+  status: string
+  total_questions: number
+}
+
+// Notification types
+export interface NotificationData {
+  id: number
+  notification_type: string
+  title: string
+  message: string
+  link: string
+  is_read: boolean
+  created_at: string
+  metadata: Record<string, any>
 }

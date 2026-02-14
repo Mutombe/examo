@@ -12,6 +12,7 @@ from .views import (
     AnswerCreateUpdateView,
     AttemptSyncAnswersView,
     AttemptTrackingView,
+    MarkingProgressView,
 )
 
 urlpatterns = [
@@ -19,6 +20,7 @@ urlpatterns = [
     path('attempts/<int:pk>/', AttemptDetailView.as_view(), name='attempt-detail'),
     path('attempts/<int:pk>/submit/', AttemptSubmitView.as_view(), name='attempt-submit'),
     path('attempts/<int:pk>/results/', AttemptResultView.as_view(), name='attempt-results'),
+    path('attempts/<int:pk>/marking-progress/', MarkingProgressView.as_view(), name='attempt-marking-progress'),
     path('attempts/<int:pk>/sync-answers/', AttemptSyncAnswersView.as_view(), name='attempt-sync-answers'),
     path('attempts/<int:pk>/track/', AttemptTrackingView.as_view(), name='attempt-track'),
     path('answers/', AnswerCreateUpdateView.as_view(), name='answer-create'),

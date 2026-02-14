@@ -226,9 +226,23 @@ export function LibraryPage() {
         </div>
 
         {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="h-80 bg-gray-100 rounded-xl animate-pulse" />
+              <Card key={i} className="overflow-hidden border-0">
+                <div className="h-48 bg-gray-200" />
+                <div className="p-4">
+                  <div className="h-5 w-3/4 bg-gray-200 rounded mb-3" />
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="h-5 w-16 bg-gray-200 rounded-full" />
+                    <div className="h-5 w-20 bg-gray-200 rounded-full" />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="h-3 w-16 bg-gray-200 rounded" />
+                    <div className="h-3 w-8 bg-gray-200 rounded" />
+                    <div className="h-3 w-10 bg-gray-200 rounded" />
+                  </div>
+                </div>
+              </Card>
             ))}
           </div>
         ) : resources.length === 0 ? (

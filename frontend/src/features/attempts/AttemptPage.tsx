@@ -93,12 +93,9 @@ export function AttemptPage() {
       attemptsApi.trackActivity(attemptId!, data),
   })
 
-  // Submit attempt mutation
+  // Submit attempt mutation — fire-and-forget, navigate immediately
   const submitAttemptMutation = useMutation({
     mutationFn: () => attemptsApi.submitAttempt(attemptId!, totalTimeSpent),
-    onSuccess: () => {
-      navigate(`/papers/${paperId}/results/${attemptId}`)
-    },
   })
 
   // Sync mutation for bulk syncing guest answers after registration
@@ -341,7 +338,9 @@ export function AttemptPage() {
         })
       }
 
+      // Fire submit in background and navigate immediately
       submitAttemptMutation.mutate()
+      navigate(`/papers/${paperId}/marking/${attemptId}`)
     } else {
       setShowSubmitModal(false)
       setShowGuestSubmitModal(true)
@@ -369,8 +368,58 @@ export function AttemptPage() {
 
   if (paperLoading || !paper?.data) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600" />
+      <div className="max-w-4xl mx-auto space-y-6 animate-pulse">
+        {/* Header bar */}
+        <div className="bg-white rounded-xl shadow-sm border p-3 sm:p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex-1 mr-3">
+              <div className="h-5 w-48 bg-gray-200 rounded" />
+              <div className="h-3 w-20 bg-gray-200 rounded mt-2" />
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="h-8 w-20 bg-gray-200 rounded-lg" />
+              <div className="h-8 w-8 bg-gray-200 rounded-lg" />
+              <div className="h-8 w-20 bg-gray-200 rounded-lg" />
+            </div>
+          </div>
+        </div>
+
+        {/* Question navigator */}
+        <Card className="p-4">
+          <div className="flex items-center justify-between mb-3">
+            <div className="h-4 w-32 bg-gray-200 rounded" />
+            <div className="h-3 w-24 bg-gray-200 rounded" />
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {Array.from({ length: 10 }).map((_, i) => (
+              <div key={i} className="w-10 h-10 bg-gray-200 rounded-lg" />
+            ))}
+          </div>
+        </Card>
+
+        {/* Question card */}
+        <Card className="border-l-4 border-l-gray-200">
+          <div className="flex items-start justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <div className="h-5 w-16 bg-gray-200 rounded-full" />
+              <div className="h-5 w-20 bg-gray-200 rounded-full" />
+            </div>
+            <div className="h-4 w-16 bg-gray-200 rounded" />
+          </div>
+          <div className="mb-6 space-y-2">
+            <div className="h-5 w-32 bg-gray-200 rounded" />
+            <div className="h-4 w-full bg-gray-200 rounded" />
+            <div className="h-4 w-5/6 bg-gray-200 rounded" />
+            <div className="h-4 w-3/4 bg-gray-200 rounded" />
+          </div>
+          <div className="h-32 bg-gray-100 rounded-lg" />
+        </Card>
+
+        {/* Navigation buttons */}
+        <div className="flex justify-between">
+          <div className="h-10 w-28 bg-gray-200 rounded-lg" />
+          <div className="h-10 w-20 bg-gray-200 rounded-lg" />
+        </div>
       </div>
     )
   }
@@ -506,7 +555,14 @@ export function AttemptPage() {
 
       {/* Question */}
       {currentQuestion && (
-        <Card>
+        <Card className={cn(
+          'border-l-4',
+          currentQuestion.question_type === 'mcq' && 'border-l-blue-400',
+          currentQuestion.question_type === 'short_answer' && 'border-l-green-400',
+          currentQuestion.question_type === 'long_answer' && 'border-l-purple-400',
+          currentQuestion.question_type === 'structured' && 'border-l-amber-400',
+          currentQuestion.question_type === 'essay' && 'border-l-rose-400',
+        )}>
           <div className="flex items-start justify-between mb-4">
             <div className="flex items-center gap-2 flex-wrap">
               <Badge variant="info">{currentQuestion.type_display}</Badge>
@@ -621,19 +677,35 @@ export function AttemptPage() {
                     className="w-4 h-4 text-primary-600"
                   />
                   <span className="font-medium">{option.key}.</span>
-                  <span>{option.text}</span>
+                  <MathText text={option.text} />
                 </label>
               ))}
             </div>
           ) : (
-            <textarea
-              className="input min-h-[120px] sm:min-h-[200px]"
-              placeholder="Type your answer here..."
-              value={answers[currentQuestion.id]?.text || ''}
-              onChange={(e) =>
-                handleAnswerChange(currentQuestion.id, e.target.value, '')
-              }
-            />
+            <div>
+              <textarea
+                className={cn(
+                  "input",
+                  currentQuestion.question_type === 'essay' ? 'min-h-[200px] sm:min-h-[300px]' : 'min-h-[120px] sm:min-h-[200px]'
+                )}
+                placeholder={
+                  currentQuestion.question_type === 'essay'
+                    ? 'Write your essay here...'
+                    : currentQuestion.question_type === 'structured'
+                    ? 'Answer each part clearly, labelling (a), (b), (c) etc...'
+                    : 'Type your answer here...'
+                }
+                value={answers[currentQuestion.id]?.text || ''}
+                onChange={(e) =>
+                  handleAnswerChange(currentQuestion.id, e.target.value, '')
+                }
+              />
+              {currentQuestion.question_type === 'essay' && (
+                <p className="text-xs text-gray-400 mt-1 text-right">
+                  {(answers[currentQuestion.id]?.text || '').split(/\s+/).filter(Boolean).length} words
+                </p>
+              )}
+            </div>
           )}
         </Card>
       )}

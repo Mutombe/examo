@@ -1,9 +1,110 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
-import { progressApi, OverallProgress, StudyStreak } from '@/lib/api'
+import { progressApi, attemptsApi, OverallProgress, StudyStreak, Attempt } from '@/lib/api'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
-import { Skeleton } from '@/components/ui/Skeleton'
+import { FileText, ExternalLink } from 'lucide-react'
+
+function StatsSkeleton() {
+  return (
+    <>
+      {[1, 2, 3, 4].map((i) => (
+        <Card key={i} className="p-4 animate-pulse">
+          <div className="h-3 w-24 bg-gray-200 rounded mb-2" />
+          <div className="h-7 w-16 bg-gray-200 rounded mb-1" />
+          <div className="h-3 w-20 bg-gray-200 rounded" />
+        </Card>
+      ))}
+    </>
+  )
+}
+
+function SubjectsSkeleton() {
+  return (
+    <div className="space-y-4 animate-pulse">
+      {[1, 2, 3].map((i) => (
+        <div key={i}>
+          <div className="flex items-center justify-between mb-1">
+            <div className="h-4 w-28 bg-gray-200 rounded" />
+            <div className="h-3 w-24 bg-gray-200 rounded" />
+          </div>
+          <div className="h-2 bg-gray-200 rounded-full" />
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function WeakTopicsSkeleton() {
+  return (
+    <div className="space-y-3 animate-pulse">
+      {[1, 2, 3].map((i) => (
+        <div key={i} className="p-3 rounded-lg border border-gray-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="h-4 w-32 bg-gray-200 rounded mb-1" />
+              <div className="h-3 w-40 bg-gray-200 rounded" />
+            </div>
+            <div className="h-5 w-16 bg-gray-200 rounded-full" />
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function ActivitySkeleton() {
+  return (
+    <div className="space-y-3 animate-pulse">
+      {[1, 2, 3].map((i) => (
+        <div key={i} className="flex items-center justify-between py-2 border-b last:border-0">
+          <div>
+            <div className="h-4 w-24 bg-gray-200 rounded mb-1" />
+            <div className="h-3 w-36 bg-gray-200 rounded" />
+          </div>
+          <div className="h-4 w-10 bg-gray-200 rounded" />
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function MilestonesSkeleton() {
+  return (
+    <div className="space-y-4 animate-pulse">
+      {[1, 2, 3, 4].map((i) => (
+        <div key={i} className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-gray-200" />
+          <div>
+            <div className="h-4 w-24 bg-gray-200 rounded mb-1" />
+            <div className="h-3 w-40 bg-gray-200 rounded" />
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function AttemptsSkeleton() {
+  return (
+    <div className="space-y-3 animate-pulse">
+      {[1, 2, 3].map((i) => (
+        <div key={i} className="p-4 rounded-lg border border-gray-200">
+          <div className="flex items-center justify-between">
+            <div className="flex-1 min-w-0">
+              <div className="h-4 w-48 bg-gray-200 rounded mb-2" />
+              <div className="h-3 w-32 bg-gray-200 rounded" />
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="h-8 w-14 bg-gray-200 rounded" />
+              <div className="h-8 w-8 bg-gray-200 rounded" />
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
 
 export function ProgressPage() {
   const { data: progressData, isLoading: progressLoading } = useQuery({
@@ -16,10 +117,20 @@ export function ProgressPage() {
     queryFn: () => progressApi.getStreak(),
   })
 
-  const { data: weakTopicsData } = useQuery({
+  const { data: weakTopicsData, isLoading: weakTopicsLoading } = useQuery({
     queryKey: ['weak-topics'],
     queryFn: () => progressApi.getWeakTopics(),
   })
+
+  const { data: attemptsData, isLoading: attemptsLoading } = useQuery({
+    queryKey: ['user-attempts'],
+    queryFn: async () => {
+      const { data } = await attemptsApi.getAttempts()
+      return (data as Attempt[]).filter((a) => a.status === 'marked')
+    },
+  })
+
+  const markedAttempts = attemptsData || []
 
   const progress: OverallProgress | undefined = progressData?.data
   const streak: StudyStreak | undefined = streakData?.data
@@ -36,13 +147,30 @@ export function ProgressPage() {
 
   return (
     <div className="space-y-6">
+      {/* Header — static */}
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Your Progress</h1>
         <p className="text-gray-600">Track your learning journey and identify areas to improve</p>
       </div>
 
       {/* Streak Banner */}
-      {streak && streak.current_streak > 0 && (
+      {streakLoading ? (
+        <Card className="p-4 bg-gradient-to-r from-orange-500 to-yellow-500 animate-pulse">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 bg-white/20 rounded" />
+              <div>
+                <div className="h-7 w-40 bg-white/30 rounded mb-1" />
+                <div className="h-4 w-56 bg-white/20 rounded" />
+              </div>
+            </div>
+            <div className="text-right">
+              <div className="h-3 w-20 bg-white/20 rounded mb-1" />
+              <div className="h-5 w-16 bg-white/30 rounded" />
+            </div>
+          </div>
+        </Card>
+      ) : streak && streak.current_streak > 0 ? (
         <Card className="p-4 bg-gradient-to-r from-orange-500 to-yellow-500 text-white">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -58,12 +186,12 @@ export function ProgressPage() {
             </div>
           </div>
         </Card>
-      )}
+      ) : null}
 
       {/* Stats Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {progressLoading ? (
-          [1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-24" />)
+          <StatsSkeleton />
         ) : progress ? (
           <>
             <Card className="p-4">
@@ -115,11 +243,7 @@ export function ProgressPage() {
           </div>
 
           {progressLoading ? (
-            <div className="space-y-3">
-              {[1, 2, 3].map((i) => (
-                <Skeleton key={i} className="h-16" />
-              ))}
-            </div>
+            <SubjectsSkeleton />
           ) : progress && progress.subjects_studied.length > 0 ? (
             <div className="space-y-4">
               {progress.subjects_studied.map((subject) => (
@@ -156,10 +280,12 @@ export function ProgressPage() {
         <Card className="p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-gray-900">Topics to Review</h2>
-            <Badge variant="warning">{weakTopics.length} need work</Badge>
+            {!weakTopicsLoading && <Badge variant="warning">{weakTopics.length} need work</Badge>}
           </div>
 
-          {weakTopics.length === 0 ? (
+          {weakTopicsLoading ? (
+            <WeakTopicsSkeleton />
+          ) : weakTopics.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
               <p className="text-green-600 font-medium">Great job!</p>
               <p className="text-sm">No weak topics identified yet.</p>
@@ -201,11 +327,7 @@ export function ProgressPage() {
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Recent Activity</h2>
 
           {streakLoading ? (
-            <div className="space-y-3">
-              {[1, 2, 3].map((i) => (
-                <Skeleton key={i} className="h-12" />
-              ))}
-            </div>
+            <ActivitySkeleton />
           ) : streak && streak.recent_sessions.length > 0 ? (
             <div className="space-y-3">
               {streak.recent_sessions.map((session) => (
@@ -246,7 +368,9 @@ export function ProgressPage() {
         <Card className="p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Milestones</h2>
 
-          {progress ? (
+          {progressLoading || streakLoading ? (
+            <MilestonesSkeleton />
+          ) : progress ? (
             <div className="space-y-4">
               <div className="flex items-center gap-3">
                 <div
@@ -327,6 +451,82 @@ export function ProgressPage() {
           )}
         </Card>
       </div>
+
+      {/* Attempted Papers */}
+      <Card className="p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold text-gray-900">Papers Attempted</h2>
+          {!attemptsLoading && (
+            <Badge variant="secondary">{markedAttempts.length} completed</Badge>
+          )}
+        </div>
+
+        {attemptsLoading ? (
+          <AttemptsSkeleton />
+        ) : markedAttempts.length === 0 ? (
+          <div className="text-center py-8 text-gray-500">
+            <FileText className="h-10 w-10 text-gray-300 mx-auto mb-3" />
+            <p className="font-medium">No completed papers yet</p>
+            <p className="text-sm mt-1">
+              Once you complete and submit a paper, it will appear here.
+            </p>
+            <Link to="/subjects" className="text-blue-600 hover:underline text-sm mt-2 inline-block">
+              Browse papers
+            </Link>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {markedAttempts.map((attempt) => {
+              const scoreColor =
+                attempt.percentage != null && attempt.percentage >= 70
+                  ? 'text-green-700 bg-green-50'
+                  : attempt.percentage != null && attempt.percentage >= 50
+                  ? 'text-yellow-700 bg-yellow-50'
+                  : 'text-red-700 bg-red-50'
+
+              return (
+                <div
+                  key={attempt.id}
+                  className="p-4 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
+                >
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <div className="font-medium text-gray-900 truncate">
+                        {attempt.paper.title}
+                      </div>
+                      <div className="text-sm text-gray-500 mt-0.5">
+                        {attempt.paper.syllabus.subject_name} · {attempt.paper.syllabus.level_display} · {attempt.paper.year} {attempt.paper.session_display}
+                        {attempt.submitted_at && (
+                          <> · {new Date(attempt.submitted_at).toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric',
+                          })}</>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      {attempt.percentage != null && (
+                        <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-sm font-semibold ${scoreColor}`}>
+                          {Math.round(attempt.percentage)}%
+                        </span>
+                      )}
+                      <Link
+                        to={`/papers/${attempt.paper.id}/results/${attempt.id}`}
+                        className="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+                        title="View results & download report"
+                      >
+                        <ExternalLink className="h-4 w-4" />
+                        <span className="hidden sm:inline">Results</span>
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </Card>
     </div>
   )
 }

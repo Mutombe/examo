@@ -6,7 +6,6 @@ import { progressApi, Bookmark } from '@/lib/api'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
-import { Skeleton } from '@/components/ui/Skeleton'
 import { Modal } from '@/components/ui/Modal'
 import { MathText } from '@/components/ui/MathText'
 import { Pagination } from '@/components/ui/Pagination'
@@ -162,9 +161,19 @@ export function BookmarksPage() {
       </div>
 
       {loading ? (
-        <div className="space-y-4">
+        <div className="space-y-4 animate-pulse">
           {[1, 2, 3, 4].map((i) => (
-            <Skeleton key={i} className="h-32" />
+            <Card key={i} className="p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="h-5 w-16 bg-gray-200 rounded-full" />
+                <div className="h-5 w-20 bg-gray-200 rounded-full" />
+              </div>
+              <div className="h-5 w-3/4 bg-gray-200 rounded mb-3" />
+              <div className="flex items-center gap-3">
+                <div className="h-8 w-24 bg-gray-200 rounded-lg" />
+                <div className="h-3 w-28 bg-gray-200 rounded" />
+              </div>
+            </Card>
           ))}
         </div>
       ) : bookmarks.length === 0 ? (

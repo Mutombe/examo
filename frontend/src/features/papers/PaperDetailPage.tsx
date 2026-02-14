@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useQuery, useMutation } from '@tanstack/react-query'
 import { FileText, Clock, Award, Play, ArrowLeft, Eye, Bookmark as BookmarkIcon } from 'lucide-react'
-import { Card, CardHeader, CardTitle, CardContent, Button, Badge, Skeleton, PDFViewerModal, MathText } from '@/components/ui'
+import { Card, CardHeader, CardTitle, CardContent, Button, Badge, PDFViewerModal, MathText } from '@/components/ui'
 import { examsApi, attemptsApi, progressApi, type Question } from '@/lib/api'
 import { useAuthStore } from '@/stores/authStore'
 import { useGuestStore } from '@/stores/guestStore'
@@ -68,10 +68,61 @@ export function PaperDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
-        <Skeleton className="h-8 w-64" />
+      <div className="space-y-6 animate-pulse">
+        {/* Back button */}
+        <div className="h-9 w-20 bg-gray-200 rounded-lg" />
+
+        {/* Paper info card */}
         <Card>
-          <Skeleton className="h-40" />
+          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="h-5 w-14 bg-gray-200 rounded-full" />
+                <div className="h-5 w-20 bg-gray-200 rounded-full" />
+                <div className="h-5 w-24 bg-gray-200 rounded-full" />
+              </div>
+              <div className="h-7 w-3/4 bg-gray-200 rounded" />
+              <div className="h-4 w-1/2 bg-gray-200 rounded mt-2" />
+            </div>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <div className="h-10 w-28 bg-gray-200 rounded-lg" />
+              <div className="h-10 w-24 bg-gray-200 rounded-lg" />
+              <div className="h-10 w-28 bg-gray-200 rounded-lg" />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-2 sm:gap-4 mt-4 sm:mt-6 pt-4 sm:pt-6 border-t">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="text-center">
+                <div className="flex items-center justify-center gap-2 mb-1">
+                  <div className="h-4 w-4 bg-gray-200 rounded" />
+                  <div className="h-4 w-14 bg-gray-200 rounded" />
+                </div>
+                <div className="h-6 w-16 bg-gray-200 rounded mx-auto" />
+              </div>
+            ))}
+          </div>
+        </Card>
+
+        {/* Questions overview card */}
+        <Card>
+          <div className="mb-4">
+            <div className="h-6 w-40 bg-gray-200 rounded" />
+          </div>
+          <div className="space-y-3">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-gray-50">
+                <div className="flex items-center gap-3">
+                  <div className="h-4 w-6 bg-gray-200 rounded" />
+                  <div className="h-4 w-48 bg-gray-200 rounded" />
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="h-5 w-16 bg-gray-200 rounded-full" />
+                  <div className="h-4 w-16 bg-gray-200 rounded" />
+                </div>
+              </div>
+            ))}
+          </div>
         </Card>
       </div>
     )
